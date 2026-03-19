@@ -1322,15 +1322,15 @@ function AnimeGroup({ entries, onEdit, onQuickAddNextSeason, formatCountdown, ge
         </div>
         <div style={{flex:1,padding:'14px 16px',minWidth:0,overflow:'hidden'}}>
           <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:3,flexWrap:'nowrap'}}>
-            <div className="title-font" style={{fontSize:20,color:'#0a0a0a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',minWidth:0}}>{anime.title}</div>
+            <div className="title-font anime-title-main" style={{fontSize:20,color:'#0a0a0a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',minWidth:0}}>{anime.title}</div>
             {anime.seasonLabel && anime.seasonLabel !== 'Сезон 1' && <span style={{fontFamily:"'Bangers', sans-serif",fontSize:10,background:'#0a0a0a',color:'#f0ede6',padding:'1px 6px',flexShrink:0,letterSpacing:'0.04em'}}>{anime.seasonLabel}</span>}
             {ong && <span style={{fontFamily:"'Bangers', sans-serif",fontSize:9,letterSpacing:'0.06em',background:'#d62828',color:'#fff',padding:'1px 6px',flexShrink:0}}>ОНГОИНГ</span>}
             {showNextBtn && <button className="next-season-btn" onClick={e => { e.stopPropagation(); onQuickAddNextSeason(base, nextSeasonNum) }}>+ С{nextSeasonNum}</button>}
           </div>
-          <div style={{fontFamily:"'Noto Sans JP'",fontSize:10,color:'#999',marginBottom:7,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{anime.titleJp && anime.titleJp !== anime.title ? `${anime.titleJp} · ` : ''}{anime.studio}{anime.year ? ` · ${anime.year}` : ''}</div>
+          <div className="anime-subtitle" style={{fontFamily:"'Noto Sans JP'",fontSize:10,color:'#999',marginBottom:7,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{anime.titleJp && anime.titleJp !== anime.title ? `${anime.titleJp} · ` : ''}{anime.studio}{anime.year ? ` · ${anime.year}` : ''}</div>
           <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>{(anime.genres || []).slice(0, 3).map(g => <span key={g} style={{fontSize:10,fontWeight:700,padding:'2px 7px',border:'1.5px solid rgba(10,10,10,0.14)',color:'#777',fontFamily:"'Space Grotesk'"}}>{g}</span>)}</div>
         </div>
-        <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',justifyContent:'center',gap:6,padding:'12px 16px',flexShrink:0,minWidth:140}}>
+        <div className="anime-right" style={{display:'flex',flexDirection:'column',alignItems:'flex-end',justifyContent:'center',gap:6,padding:'12px 16px',flexShrink:0,minWidth:140}}>
           <div style={{lineHeight:1,color:anime.score ? '#0a0a0a' : '#ccc',display:'flex',alignItems:'baseline'}}>
             <span style={{fontFamily:"'Bangers', sans-serif",fontSize:30,letterSpacing:'0.04em'}}>{anime.score || '—'}</span>
             {anime.score && <span style={{fontFamily:"'Space Grotesk'",fontSize:10,fontWeight:700,color:'#bbb',marginLeft:2}}>/10</span>}
@@ -1359,14 +1359,14 @@ function AnimeGroup({ entries, onEdit, onQuickAddNextSeason, formatCountdown, ge
         </div>
         <div style={{flex:1,padding:'14px 16px',minWidth:0,overflow:'hidden'}}>
           <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:3,flexWrap:'wrap'}}>
-            <div className="title-font" style={{fontSize:20,color:'#0a0a0a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{base.title}</div>
+            <div className="title-font anime-title-main" style={{fontSize:20,color:'#0a0a0a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{base.title}</div>
             {entries.map(e => <span key={e.id} style={{fontFamily:"'Bangers', sans-serif",fontSize:9,letterSpacing:'0.04em',background:STATUS_META[e.status].color,color:'#fff',padding:'1px 5px',flexShrink:0}}>{e.seasonLabel || `С${e.season || 1}`}</span>)}
             {showNextBtn && <button className="next-season-btn" onClick={e => { e.stopPropagation(); onQuickAddNextSeason(base, nextSeasonNum) }}>+ С{nextSeasonNum}</button>}
           </div>
-          <div style={{fontFamily:"'Noto Sans JP'",fontSize:10,color:'#999',marginBottom:7,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{base.titleJp && base.titleJp !== base.title ? `${base.titleJp} · ` : ''}{base.studio}{base.year ? ` · ${base.year}` : ''}</div>
+          <div className="anime-subtitle" style={{fontFamily:"'Noto Sans JP'",fontSize:10,color:'#999',marginBottom:7,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{base.titleJp && base.titleJp !== base.title ? `${base.titleJp} · ` : ''}{base.studio}{base.year ? ` · ${base.year}` : ''}</div>
           <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>{(base.genres || []).slice(0, 3).map(g => <span key={g} style={{fontSize:10,fontWeight:700,padding:'2px 7px',border:'1.5px solid rgba(10,10,10,0.14)',color:'#777',fontFamily:"'Space Grotesk'"}}>{g}</span>)}</div>
         </div>
-        <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',justifyContent:'center',gap:6,padding:'12px 16px',flexShrink:0,minWidth:140}}>
+        <div className="anime-right" style={{display:'flex',flexDirection:'column',alignItems:'flex-end',justifyContent:'center',gap:6,padding:'12px 16px',flexShrink:0,minWidth:140}}>
           <div style={{lineHeight:1,color:avgScore ? '#0a0a0a' : '#ccc',display:'flex',alignItems:'baseline'}}>
             <span style={{fontFamily:"'Bangers', sans-serif",fontSize:30,letterSpacing:'0.04em'}}>{avgScore || '—'}</span>
             {avgScore && <span style={{fontFamily:"'Space Grotesk'",fontSize:10,fontWeight:700,color:'#bbb',marginLeft:2}}>/10</span>}
@@ -1717,6 +1717,19 @@ export default function Tracker({ navigate }) {
         .next-season-btn:hover{background:#0a0a0a;border-color:#0a0a0a;color:#f0ede6}
         @keyframes rowIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
         .anime-row{animation:rowIn 0.2s ease forwards}
+        @media(max-width:640px){
+          .toolbar-extra{display:none!important}
+          .toolbar-add{padding:0 14px!important;font-size:15px!important}
+          .search-input{font-size:13px!important;padding:0 12px!important}
+          .tab-btn{padding:0 8px!important;font-size:11px!important}
+          .anime-title-main{white-space:normal!important;overflow:visible!important;text-overflow:unset!important;font-size:16px!important}
+          .anime-subtitle{white-space:normal!important;overflow:visible!important;text-overflow:unset!important}
+          .poster-wrap{width:50px!important}
+          .poster-img{width:50px!important;height:72px!important}
+          .anime-right{min-width:100px!important;padding:10px 10px!important}
+          .anime-right .score-num{font-size:24px!important}
+
+        }
       `}</style>
       <div className="ht" />
 
@@ -1728,9 +1741,9 @@ export default function Tracker({ navigate }) {
         <div style={{display:'flex',alignItems:'center',borderBottom:'2px solid rgba(10,10,10,0.1)',height:48}}>
           <input className="search-input" placeholder="Найти в списке...  ⌘K — добавить новое" value={listSearch} onChange={e => setListSearch(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') setListSearch('') }} />
           {listSearch && <button onClick={() => setListSearch('')} style={{padding:'0 10px',height:'100%',background:'none',border:'none',color:'#aaa',cursor:'pointer',fontSize:16}}>✕</button>}
-          <button onClick={exportList} style={{fontFamily:"'Space Grotesk'",fontSize:12,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',padding:'0 14px',height:'100%',background:'transparent',color:'#888',border:'none',borderLeft:'2px solid rgba(10,10,10,0.1)',cursor:'pointer',whiteSpace:'nowrap'}} onMouseEnter={e => e.currentTarget.style.color = '#0a0a0a'} onMouseLeave={e => e.currentTarget.style.color = '#888'}>↓ ЭКСПОРТ</button>
-          <button onClick={() => setShowImport(true)} style={{fontFamily:"'Space Grotesk'",fontSize:12,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',padding:'0 14px',height:'100%',background:'transparent',color:'#888',border:'none',borderLeft:'2px solid rgba(10,10,10,0.1)',cursor:'pointer',whiteSpace:'nowrap'}} onMouseEnter={e => e.currentTarget.style.color = '#0a0a0a'} onMouseLeave={e => e.currentTarget.style.color = '#888'}>ИМПОРТ</button>
-          <button onClick={() => setShowSearch(true)} style={{fontFamily:"'Bangers', sans-serif",fontSize:17,letterSpacing:'0.08em',padding:'0 22px',height:'100%',background:'#0a0a0a',color:'#f0ede6',border:'none',borderLeft:'3px solid #0a0a0a',cursor:'pointer',whiteSpace:'nowrap'}} onMouseEnter={e => e.currentTarget.style.background = '#d62828'} onMouseLeave={e => e.currentTarget.style.background = '#0a0a0a'}>+ ДОБАВИТЬ</button>
+          <button className="toolbar-extra" onClick={exportList} style={{fontFamily:"'Space Grotesk'",fontSize:12,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',padding:'0 14px',height:'100%',background:'transparent',color:'#888',border:'none',borderLeft:'2px solid rgba(10,10,10,0.1)',cursor:'pointer',whiteSpace:'nowrap'}} onMouseEnter={e => e.currentTarget.style.color = '#0a0a0a'} onMouseLeave={e => e.currentTarget.style.color = '#888'}>↓ ЭКСПОРТ</button>
+          <button className="toolbar-extra" onClick={() => setShowImport(true)} style={{fontFamily:"'Space Grotesk'",fontSize:12,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',padding:'0 14px',height:'100%',background:'transparent',color:'#888',border:'none',borderLeft:'2px solid rgba(10,10,10,0.1)',cursor:'pointer',whiteSpace:'nowrap'}} onMouseEnter={e => e.currentTarget.style.color = '#0a0a0a'} onMouseLeave={e => e.currentTarget.style.color = '#888'}>ИМПОРТ</button>
+          <button className="toolbar-add" onClick={() => setShowSearch(true)} style={{fontFamily:"'Bangers', sans-serif",fontSize:17,letterSpacing:'0.08em',padding:'0 22px',height:'100%',background:'#0a0a0a',color:'#f0ede6',border:'none',borderLeft:'3px solid #0a0a0a',cursor:'pointer',whiteSpace:'nowrap'}} onMouseEnter={e => e.currentTarget.style.background = '#d62828'} onMouseLeave={e => e.currentTarget.style.background = '#0a0a0a'}>+ ДОБАВИТЬ</button>
         </div>
         <div style={{display:'flex',alignItems:'stretch',padding:'0 20px',height:38,overflowX:'auto',borderBottom:'2px solid rgba(10,10,10,0.1)'}}>
           {TABS.map(t => (
