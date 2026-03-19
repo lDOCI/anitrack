@@ -1718,7 +1718,7 @@ export default function Tracker({ navigate }) {
         @keyframes rowIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
         .anime-row{animation:rowIn 0.2s ease forwards}
         @media(max-width:640px){
-          .toolbar-extra{display:none!important}
+          .toolbar-export{display:none!important}
           .toolbar-add{padding:0 14px!important;font-size:15px!important}
           .search-input{font-size:13px!important;padding:0 12px!important}
           .tab-btn{padding:0 8px!important;font-size:11px!important}
@@ -1741,8 +1741,8 @@ export default function Tracker({ navigate }) {
         <div style={{display:'flex',alignItems:'center',borderBottom:'2px solid rgba(10,10,10,0.1)',height:48}}>
           <input className="search-input" placeholder="Найти в списке...  ⌘K — добавить новое" value={listSearch} onChange={e => setListSearch(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') setListSearch('') }} />
           {listSearch && <button onClick={() => setListSearch('')} style={{padding:'0 10px',height:'100%',background:'none',border:'none',color:'#aaa',cursor:'pointer',fontSize:16}}>✕</button>}
-          <button className="toolbar-extra" onClick={exportList} style={{fontFamily:"'Space Grotesk'",fontSize:12,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',padding:'0 14px',height:'100%',background:'transparent',color:'#888',border:'none',borderLeft:'2px solid rgba(10,10,10,0.1)',cursor:'pointer',whiteSpace:'nowrap'}} onMouseEnter={e => e.currentTarget.style.color = '#0a0a0a'} onMouseLeave={e => e.currentTarget.style.color = '#888'}>↓ ЭКСПОРТ</button>
-          <button className="toolbar-extra" onClick={() => setShowImport(true)} style={{fontFamily:"'Space Grotesk'",fontSize:12,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',padding:'0 14px',height:'100%',background:'transparent',color:'#888',border:'none',borderLeft:'2px solid rgba(10,10,10,0.1)',cursor:'pointer',whiteSpace:'nowrap'}} onMouseEnter={e => e.currentTarget.style.color = '#0a0a0a'} onMouseLeave={e => e.currentTarget.style.color = '#888'}>ИМПОРТ</button>
+          <button className="toolbar-export" onClick={exportList} style={{fontFamily:"'Space Grotesk'",fontSize:12,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',padding:'0 14px',height:'100%',background:'transparent',color:'#888',border:'none',borderLeft:'2px solid rgba(10,10,10,0.1)',cursor:'pointer',whiteSpace:'nowrap'}} onMouseEnter={e => e.currentTarget.style.color = '#0a0a0a'} onMouseLeave={e => e.currentTarget.style.color = '#888'}>↓ ЭКСПОРТ</button>
+          <button onClick={() => setShowImport(true)} style={{fontFamily:"'Space Grotesk'",fontSize:12,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',padding:'0 14px',height:'100%',background:'transparent',color:'#888',border:'none',borderLeft:'2px solid rgba(10,10,10,0.1)',cursor:'pointer',whiteSpace:'nowrap'}} onMouseEnter={e => e.currentTarget.style.color = '#0a0a0a'} onMouseLeave={e => e.currentTarget.style.color = '#888'}>ИМПОРТ</button>
           <button className="toolbar-add" onClick={() => setShowSearch(true)} style={{fontFamily:"'Bangers', sans-serif",fontSize:17,letterSpacing:'0.08em',padding:'0 22px',height:'100%',background:'#0a0a0a',color:'#f0ede6',border:'none',borderLeft:'3px solid #0a0a0a',cursor:'pointer',whiteSpace:'nowrap'}} onMouseEnter={e => e.currentTarget.style.background = '#d62828'} onMouseLeave={e => e.currentTarget.style.background = '#0a0a0a'}>+ ДОБАВИТЬ</button>
         </div>
         <div style={{display:'flex',alignItems:'stretch',padding:'0 20px',height:38,overflowX:'auto',borderBottom:'2px solid rgba(10,10,10,0.1)'}}>
