@@ -268,6 +268,12 @@ export default function Landing({ navigate }) {
           .hero-grid { grid-template-columns: 1fr !important; }
           .nav-links { display: none; }
           .stats-row { grid-template-columns: 1fr 1fr !important; }
+          .feat-grid { grid-template-columns: 1fr !important; }
+          .feat-grid .panel { border-right: none !important; border-bottom: 3px solid #0a0a0a !important; }
+          .cta-grid { grid-template-columns: 1fr !important; min-height: auto !important; }
+          .cta-grid > div { border-right: none !important; padding: 40px 24px !important; }
+          .nav { padding: 0 16px; }
+          .panel { padding: 24px 16px !important; }
         }
       `}</style>
 
@@ -510,7 +516,7 @@ export default function Landing({ navigate }) {
         </div>
 
         {/* Irregular panel grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 0.9fr', gridTemplateRows: 'auto auto', borderBottom: '3px solid #0a0a0a' }}>
+        <div className="feat-grid" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 0.9fr', gridTemplateRows: 'auto auto', borderBottom: '3px solid #0a0a0a' }}>
           {[
             { jp: 'リスト', title: 'СПИСОК', desc: 'Поиск с автодополнением или импорт текстом. Оценки, статусы, заметки.', dark: false, skew: false, action: onStart },
             { jp: 'プロフィール', title: 'ПРОФИЛЬ', desc: 'Статистика, жанры, студии — и публичная ссылка для друзей.', dark: true, skew: false, action: onProfile },
@@ -551,7 +557,7 @@ export default function Landing({ navigate }) {
       </section>
 
       {/* ═══════ BOTTOM CTA ═══════ */}
-      <section style={{
+      <section className="cta-grid" style={{
         display: 'grid', gridTemplateColumns: '1.5fr 1fr',
         borderBottom: '3px solid #0a0a0a', minHeight: 320,
       }}>

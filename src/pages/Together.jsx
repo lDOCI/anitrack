@@ -31,8 +31,8 @@ function SpeedLines({ opacity = 0.04, color = '#0a0a0a' }) {
 }
 
 function compare(myList, theirList) {
-  const myMap = new Map(myList.map(a => [a.shikiId, a]))
-  const theirMap = new Map(theirList.map(a => [a.shikiId, a]))
+  const myMap = new Map(myList.map(a => [Number(a.shikiId), a]))
+  const theirMap = new Map(theirList.map(a => [Number(a.shikiId), a]))
 
   const both = []         // оба смотрели
   const onlyMe = []       // только я
@@ -156,6 +156,12 @@ export default function Together({ navigate, compareData }) {
         }
         @keyframes fadeUp { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:none } }
         .fade-up { animation: fadeUp 0.6s ease forwards; }
+        @media (max-width:640px) {
+          .compat-row { grid-template-columns: 1fr !important; }
+          .compat-row > div { border-right: none !important; border-bottom: 3px solid #0a0a0a; }
+          .tab-row { flex-wrap: wrap !important; }
+          .tab-row button { font-size: 11px !important; padding: 10px 4px !important; }
+        }
       `}</style>
 
       <div className="ht" />
@@ -249,7 +255,7 @@ export default function Together({ navigate, compareData }) {
           /* RESULTS */
           <>
             {/* Compatibility */}
-            <section style={{ borderBottom: '3px solid #0a0a0a', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
+            <section className="compat-row" style={{ borderBottom: '3px solid #0a0a0a', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
               <div style={{ padding: '28px 24px', borderRight: '3px solid #0a0a0a', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
                 <Hatch angle={45} gap={7} opacity={0.04} />
                 <div style={{ position: 'relative', zIndex: 1 }}>
@@ -286,7 +292,7 @@ export default function Together({ navigate, compareData }) {
             </section>
 
             {/* Tabs */}
-            <div style={{ display: 'flex', borderBottom: '3px solid #0a0a0a' }}>
+            <div className="tab-row" style={{ display: 'flex', borderBottom: '3px solid #0a0a0a' }}>
               {tabs.map((t, i) => (
                 <button key={t.key} onClick={() => setTab(t.key)} style={{
                   flex: 1, padding: '14px 8px',
