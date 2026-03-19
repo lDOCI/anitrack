@@ -266,14 +266,19 @@ export default function Landing({ navigate }) {
 
         @media (max-width:768px) {
           .hero-grid { grid-template-columns: 1fr !important; }
+          .hero-grid > .panel { grid-column: 1 !important; grid-row: auto !important; border-left: none !important; padding: 28px 20px !important; }
           .nav-links { display: none; }
+          .nav { padding: 0 12px !important; height: 48px !important; }
+          .nav-logo { font-size: 24px !important; }
+          .nav-open { font-size: 16px !important; padding: 3px 14px !important; }
           .stats-row { grid-template-columns: 1fr 1fr !important; }
+          .stats-row > div { padding: 24px 16px !important; }
           .feat-grid { grid-template-columns: 1fr !important; }
           .feat-grid .panel { border-right: none !important; border-bottom: 3px solid #0a0a0a !important; }
           .cta-grid { grid-template-columns: 1fr !important; min-height: auto !important; }
-          .cta-grid > div { border-right: none !important; padding: 40px 24px !important; }
-          .nav { padding: 0 16px; }
-          .panel { padding: 24px 16px !important; }
+          .cta-grid > div { border-right: none !important; padding: 32px 20px !important; }
+          .fx-huge { font-size: clamp(36px, 10vw, 72px) !important; }
+          footer { padding: 16px 20px !important; }
         }
       `}</style>
 
