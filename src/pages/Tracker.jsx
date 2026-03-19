@@ -46,8 +46,23 @@ function getRuSearchQuery(title) {
   return null
 }
 
+// ── Shikimori hosts (fallback) ────────────────────────────
+const SHIKI_HOSTS = ['https://shikimori.one', 'https://shikimori.io']
+let _activeHost = SHIKI_HOSTS[0]
+
+// Wrapper: fetch with host fallback
+async function shikiFetchLocal(path, opts) {
+  for (const host of [_activeHost, ...SHIKI_HOSTS.filter(h => h !== _activeHost)]) {
+    try {
+      const res = await fetch(host + path, opts)
+      if (res.ok || res.status === 429) { _activeHost = host; return res }
+    } catch {}
+  }
+  throw new Error('All Shikimori hosts unavailable')
+}
+
 // ── Shikimori GraphQL ─────────────────────────────────────
-const SHIKI_GQL = 'https://shikimori.one/api/graphql'
+const SHIKI_GQL = '/api/graphql' // path only, used with shikiFetchLocal
 const GQL_SEARCH_Q = `query($q:String!){animes(search:$q,limit:20,order:popularity){id name russian licenseNameRu kind status episodes episodesAired airedOn{year} nextEpisodeAt poster{mainUrl} genres{russian kind} studios{name}}}`
 const GQL_BY_IDS_Q = `query($ids:String!){animes(ids:$ids,limit:25){id poster{mainUrl}}}`
 const GQL_BY_IDS_FULL_Q = `query($ids:String!){animes(ids:$ids,limit:50){id name russian licenseNameRu kind status episodes episodesAired airedOn{year} nextEpisodeAt poster{mainUrl} genres{russian kind} studios{name}}}`
@@ -84,7 +99,7 @@ function mapGql(a) {
 async function gqlSearch(q) {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const res = await fetch(SHIKI_GQL, {
+      const res = await shikiFetchLocal(SHIKI_GQL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: GQL_SEARCH_Q, variables: { q } }),
@@ -102,7 +117,7 @@ async function gqlPosters(shikiIds) {
   if (!shikiIds.length) return {}
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const res = await fetch(SHIKI_GQL, {
+      const res = await shikiFetchLocal(SHIKI_GQL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: GQL_BY_IDS_Q, variables: { ids: shikiIds.map(String).join(',') } }),
@@ -127,7 +142,7 @@ async function gqlFetchByIds(ids) {
     const chunk = ids.slice(i, i + 50).map(String)
     for (let attempt = 0; attempt < 4; attempt++) {
       try {
-        const res = await fetch(SHIKI_GQL, {
+        const res = await shikiFetchLocal(SHIKI_GQL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ query: GQL_BY_IDS_FULL_Q, variables: { ids: chunk.join(',') } }),
@@ -151,8 +166,8 @@ async function restSearch(q) {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       await _restThrottle()
-      const res = await fetch(
-        `https://shikimori.one/api/animes?search=${encodeURIComponent(q)}&limit=15&order=popularity`,
+      const res = await shikiFetchLocal(
+        `/api/animes?search=${encodeURIComponent(q)}&limit=15&order=popularity`,
         { headers: { 'User-Agent': 'AniTracker/1.0' } }
       )
       if (res.status === 429) { await sleep(2000 + attempt * 1000); continue }
@@ -167,7 +182,7 @@ async function restSearch(q) {
         epTotal: a.episodes || null,
         epAired: a.episodes_aired || null,
         isOngoing: a.status === 'ongoing',
-        poster: a.image?.original ? `https://shikimori.one${a.image.original}` : null,
+        poster: a.image?.original ? `${_activeHost}${a.image.original}` : null,
         genres: pickGenres(a.genres),
         year: a.aired_on ? new Date(a.aired_on).getFullYear() : null,
         studio: a.studios?.[0]?.name || '—',
@@ -191,7 +206,7 @@ async function restRelated(shikiId) {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       await _restThrottle()
-      const res = await fetch(`https://shikimori.one/api/animes/${shikiId}/related`)
+      const res = await shikiFetchLocal(`/api/animes/${shikiId}/related`)
       if (res.status === 429) { await sleep(2000 + attempt * 1500); continue }
       if (!res.ok) return []
       const data = await res.json()
@@ -215,7 +230,7 @@ async function restDetails(shikiId) {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       await _restThrottle()
-      const res = await fetch(`https://shikimori.one/api/animes/${shikiId}`)
+      const res = await shikiFetchLocal(`/api/animes/${shikiId}`)
       if (res.status === 429) { await sleep(2000 + attempt * 1500); continue }
       if (!res.ok) return null
       const a = await res.json()
@@ -1447,7 +1462,7 @@ export default function Tracker({ navigate }) {
       for (let i = 0; i < ids.length; i += 50) {
         try {
           const batch = ids.slice(i, i + 50)
-          const res = await fetch(SHIKI_GQL, {
+          const res = await shikiFetchLocal(SHIKI_GQL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ query: GQL_BY_IDS_FULL_Q, variables: { ids: batch.join(',') } }),

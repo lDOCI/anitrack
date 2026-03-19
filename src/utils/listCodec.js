@@ -105,7 +105,19 @@ export function parseHash(hash) {
 /**
  * Hydrate minimal list (id+score+status) → full data from Shikimori GQL.
  */
-const GQL = 'https://shikimori.one/api/graphql'
+const SHIKI_HOSTS = ['https://shikimori.one', 'https://shikimori.io']
+
+export async function shikiFetch(path, opts) {
+  for (const host of SHIKI_HOSTS) {
+    try {
+      const res = await fetch(host + path, opts)
+      if (res.ok) return res
+    } catch {}
+  }
+  return null
+}
+
+const GQL_PATH = '/api/graphql'
 const GQL_Q = `query($ids:String!){animes(ids:$ids,limit:50){id name russian licenseNameRu kind episodes episodesAired airedOn{year} genres{russian kind} studios{name}}}`
 
 function pickGenres(genres) {
@@ -122,13 +134,15 @@ export async function hydrateList(minimalList, onProgress) {
   for (let i = 0; i < ids.length; i += 50) {
     const batch = ids.slice(i, i + 50)
     try {
-      const res = await fetch(GQL, {
+      const res = await shikiFetch(GQL_PATH, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: GQL_Q, variables: { ids: batch.join(',') } }),
       })
-      const data = await res.json()
-      for (const a of (data.data?.animes || [])) byId[Number(a.id)] = a
+      if (res) {
+        const data = await res.json()
+        for (const a of (data.data?.animes || [])) byId[Number(a.id)] = a
+      }
     } catch {}
     if (onProgress) onProgress(Math.min(1, (i + 50) / ids.length))
     if (i + 50 < ids.length) await new Promise(r => setTimeout(r, 350))
