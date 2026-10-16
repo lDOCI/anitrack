@@ -4,12 +4,12 @@ import NavBar from '../components/NavBar'
 const STORAGE_KEY = 'anitrack_list'
 
 const TIERS = [
-  { key: 'S', color: '#d62828', bg: '#ffeaea', jp: '神' },
-  { key: 'A', color: '#c05621', bg: '#fff2e8', jp: '良' },
-  { key: 'B', color: '#a16207', bg: '#fefce8', jp: '普' },
-  { key: 'C', color: '#166534', bg: '#f0fdf4', jp: '可' },
-  { key: 'D', color: '#1e40af', bg: '#eff6ff', jp: '低' },
-  { key: 'F', color: '#4b5563', bg: '#f9fafb', jp: '糞' },
+  { key: 'S', color: 'var(--mag)', jp: '神' },
+  { key: 'A', color: 'var(--acid)', jp: '良' },
+  { key: 'B', color: 'var(--cy)', jp: '普' },
+  { key: 'C', color: '#7b86ff', jp: '可' },
+  { key: 'D', color: '#c3a8ff', jp: '低' },
+  { key: 'F', color: '#8d8db3', jp: '糞' },
 ]
 
 function loadList() {
@@ -159,55 +159,56 @@ export default function TierList({ navigate }) {
     })
   }
 
+  const resetBtn = (
+    <button className="tl-ghost" onClick={() => setState(buildInitialState(allItems))}>Сброс</button>
+  )
+  const shareBtn = (
+    <button className="btn sm" onClick={share} style={copied ? { background: 'var(--cy)' } : undefined}>
+      {copied ? 'Скопировано' : 'Поделиться'}
+    </button>
+  )
+
   if (list.length === 0) return (
-    <div style={{ background: '#f0ede6', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-      <div style={{ fontFamily: "'Bangers', sans-serif", fontSize: 52, color: '#ccc', letterSpacing: '0.04em' }}>リスト空</div>
-      <div style={{ fontFamily: "'Space Grotesk'", fontSize: 14, color: '#aaa' }}>Сначала добавь аниме в трекер</div>
-      <button onClick={() => navigate('tracker')} style={{ marginTop: 8, fontFamily: "'Bangers', sans-serif", fontSize: 18, letterSpacing: '0.08em', padding: '8px 28px', background: '#0a0a0a', color: '#f0ede6', border: '3px solid #0a0a0a', cursor: 'pointer' }}>← В СПИСОК</button>
+    <div className="tl">
+      <NavBar active="tierlist" onNavigate={navigate} />
+      <div className="tl-empty">
+        <div className="t-out" style={{ fontSize: 'clamp(64px,16vw,200px)', '--stroke': 'var(--acid)' }}>Пусто</div>
+        <div style={{ fontSize: 17, color: 'var(--mut)', margin: '10px 0 30px' }}>Сначала добавь аниме в трекер</div>
+        <button className="btn" onClick={() => navigate('tracker')}>← В список</button>
+      </div>
+      <style>{CSS}</style>
     </div>
   )
 
   return (
-    <div style={{ background: '#f0ede6', minHeight: '100vh' }}>
-      <style>{`
-        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        body{background:#f0ede6!important}
-        .tcard{width:62px;height:88px;flex-shrink:0;cursor:grab;position:relative;border:2px solid transparent;transition:transform 0.12s,box-shadow 0.12s,border-color 0.1s;user-select:none}
-        .tcard:hover{transform:translateY(-3px) scale(1.05);box-shadow:0 8px 20px rgba(10,10,10,0.2);border-color:#0a0a0a;z-index:2}
-        .tcard.ghost{opacity:0.3;transform:scale(0.93)!important;box-shadow:none!important}
-        .tcard img,.tcard .nop{width:100%;height:100%;object-fit:cover;object-position:top;display:block;pointer-events:none}
-        .tcard .nop{background:#e0ddd6;display:flex;align-items:center;justify-content:center;font-family:'Bangers', sans-serif;font-size:11px;color:#bbb;text-align:center;padding:4px;line-height:1.2}
-        .tcard .tip{display:none;position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:#0a0a0a;color:#f0ede6;padding:3px 8px;font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:600;white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis;pointer-events:none;z-index:20}
-        .tcard:hover .tip{display:block}
-        .dzone{display:flex;flex-wrap:wrap;gap:4px;flex:1;padding:5px;min-height:98px;align-content:flex-start;transition:background 0.1s}
-        .dzone.ov{background:rgba(214,40,40,0.06);outline:2px dashed rgba(214,40,40,0.3);outline-offset:-2px}
-        .ht::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;opacity:0.025;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px}
-      `}</style>
-
-      <div className="ht" />
-
+    <div className="tl">
       <NavBar active="tierlist" onNavigate={navigate} rightContent={<>
-        <span style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: '#bbb', fontWeight: 600 }}>{allItems.length} аниме</span>
-        <button onClick={() => setState(buildInitialState(allItems))}
-          style={{ fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', padding: '4px 12px', background: 'none', border: '1.5px solid #ddd', cursor: 'pointer', color: '#aaa', transition: 'all 0.1s' }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = '#0a0a0a'; e.currentTarget.style.color = '#0a0a0a' }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.color = '#aaa' }}>СБРОС</button>
-        <button onClick={share}
-          style={{ fontFamily: "'Bangers', sans-serif", fontSize: 14, letterSpacing: '0.08em', padding: '4px 16px', background: copied ? '#166534' : '#0a0a0a', color: '#f0ede6', border: `2px solid ${copied ? '#166534' : '#0a0a0a'}`, cursor: 'pointer', transition: 'all 0.15s' }}>
-          {copied ? '✓ СКОПИРОВАНО' : 'ПОДЕЛИТЬСЯ'}
-        </button>
+        <span className="t-hud" style={{ color: 'var(--mut)' }}>{allItems.length} аниме</span>
+        {resetBtn}
+        {shareBtn}
       </>} />
 
-      <div style={{ maxWidth: 980, margin: '0 auto', padding: '72px 16px 20px' }}>
+      <header className="tl-head">
+        <div>
+          <div className="t-hud" style={{ color: 'var(--acid)' }}>// тир-лист / ティア</div>
+          <h1 className="t-head tl-h1">Расставь<br /><span className="t-out">по местам</span></h1>
+        </div>
+        <div className="tl-head-r">
+          <div className="t-impact tl-count">{allItems.length}</div>
+          <div className="t-hud" style={{ color: 'var(--mut)' }}>тайтлов в игре</div>
+          <div className="tl-mobile-actions">{resetBtn}{shareBtn}</div>
+        </div>
+      </header>
 
+      <div className="tl-body">
         {TIERS.map(tier => {
           const items = tiers[tier.key] || []
           const isOver = overZone === tier.key
           return (
-            <div key={tier.key} style={{ display: 'flex', marginBottom: 3, border: '2px solid rgba(10,10,10,0.1)', background: '#fff' }}>
-              <div style={{ width: 64, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: tier.bg, borderRight: '2px solid rgba(10,10,10,0.08)', gap: 1, minHeight: 98 }}>
-                <span style={{ fontFamily: "'Bangers', sans-serif", fontSize: 42, color: tier.color, lineHeight: 1 }}>{tier.key}</span>
-                <span style={{ fontFamily: "'Noto Sans JP'", fontSize: 9, color: tier.color, opacity: 0.55 }}>{tier.jp}</span>
+            <div key={tier.key} className="tl-row" style={{ '--tc': tier.color }}>
+              <div className="tl-label">
+                <span className="t-impact tl-letter">{tier.key}</span>
+                <span className="t-jp tl-jp">{tier.jp}</span>
               </div>
               <div
                 className={`dzone ${isOver ? 'ov' : ''}`}
@@ -222,26 +223,19 @@ export default function TierList({ navigate }) {
                     onDragEnd={onDragEnd}
                   />
                 ))}
-                {items.length === 0 && (
-                  <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 10, color: '#e5e3de', fontFamily: "'Noto Sans JP'", fontSize: 10, pointerEvents: 'none', minHeight: 88 }}>
-                    перетащи сюда
-                  </div>
-                )}
+                {items.length === 0 && <div className="tl-hint t-hud">перетащи сюда</div>}
               </div>
             </div>
           )
         })}
 
-        {/* Unranked */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '20px 0 10px' }}>
-          <div style={{ flex: 1, height: 2, background: 'rgba(10,10,10,0.07)' }} />
-          <span style={{ fontFamily: "'Bangers', sans-serif", fontSize: 12, letterSpacing: '0.08em', color: '#bbb' }}>НЕ ОЦЕНЕНО · 未評価</span>
-          <div style={{ flex: 1, height: 2, background: 'rgba(10,10,10,0.07)' }} />
+        <div className="tl-un-h">
+          <span className="t-hud" style={{ color: 'var(--cy)' }}>// не оценено · 未評価</span>
+          <i />
         </div>
 
         <div
-          className={`dzone ${overZone === 'unranked' ? 'ov' : ''}`}
-          style={{ border: '2px dashed rgba(10,10,10,0.1)', background: '#fafaf8', minHeight: 110 }}
+          className={`dzone tl-un ${overZone === 'unranked' ? 'ov' : ''}`}
           onDragOver={e => { e.preventDefault(); setOverZone('unranked') }}
           onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setOverZone(null) }}
           onDrop={e => onDrop(e, 'unranked')}
@@ -253,17 +247,13 @@ export default function TierList({ navigate }) {
               onDragEnd={onDragEnd}
             />
           ))}
-          {unranked.length === 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 12, color: '#d5d3ce', fontFamily: "'Noto Sans JP'", fontSize: 10, pointerEvents: 'none', minHeight: 100 }}>
-              все аниме распределены ✓
-            </div>
-          )}
+          {unranked.length === 0 && <div className="tl-hint t-hud">все аниме распределены</div>}
         </div>
 
-        <div style={{ marginTop: 14, textAlign: 'center', fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: '#ccc' }}>
-          ПЕРЕТАСКИВАЙ ПОСТЕРЫ · «ПОДЕЛИТЬСЯ» КОПИРУЕТ ССЫЛКУ С ТВОИМ ТИРЛИСТОМ
-        </div>
+        <div className="t-hud tl-foot">Перетаскивай постеры. «Поделиться» копирует ссылку с твоим тир-листом.</div>
       </div>
+
+      <style>{CSS}</style>
     </div>
   )
 }
@@ -275,6 +265,7 @@ function Card({ item, isDragging, onDragStart, onDragEnd }) {
       draggable
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
+      title={item.title}
     >
       {item.poster
         ? <img src={item.poster} alt={item.title} />
@@ -284,3 +275,55 @@ function Card({ item, isDragging, onDragStart, onDragEnd }) {
     </div>
   )
 }
+
+const CSS = `
+  .tl { padding-top: 52px; min-height: 100vh; overflow-x: hidden; background: var(--bg); color: var(--fg); }
+  .tl *, .tl *::before, .tl *::after { box-sizing: border-box; }
+  .tl h1 { margin: 0; }
+  .tl-empty { min-height: calc(100vh - 52px); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+  .tl button:focus-visible { outline: 3px solid var(--cy); outline-offset: 3px; }
+  .tl-ghost { background: none; border: 0; box-shadow: inset 0 0 0 1px var(--line); color: var(--fg); font: 700 10px var(--f-head); letter-spacing: .14em; text-transform: uppercase; padding: 10px 14px; cursor: pointer; transition: background .15s, color .15s; }
+  .tl-ghost:hover { background: var(--fg); color: var(--bg); }
+  .tl-mobile-actions { display: none; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  .tl-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; padding: 6vh 5vw 11vh; background: linear-gradient(115deg, var(--bg-2) 0 60%, var(--bg) 60%); clip-path: polygon(0 0, 100% 0, 100% calc(100% - 4vw), 0 100%); margin-bottom: -3vw; }
+  .tl-h1 { font-size: clamp(40px, 7.4vw, 120px); margin-top: 16px; }
+  .tl-head-r { text-align: right; flex-shrink: 0; }
+  .tl-count { font-size: clamp(64px, 11vw, 180px); color: var(--acid); transform: rotate(-3deg); display: block; }
+
+  .tl-body { max-width: 1240px; margin: 0 auto; padding: 4vw 5vw 8vw; }
+  .tl-row { display: flex; margin-bottom: 8px; background: var(--bg-2); border-left: 6px solid var(--tc); position: relative; }
+  .tl-label { width: 96px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: var(--tc); color: var(--bg); clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%); padding-right: 10px; }
+  .tl-letter { font-size: 54px; line-height: 1; letter-spacing: 0; }
+  .tl-jp { font-size: 12px; opacity: .85; }
+  .dzone { display: flex; flex-wrap: wrap; gap: 10px; flex: 1; padding: 12px 14px; min-height: 126px; align-content: flex-start; transition: background .12s; min-width: 0; }
+  .dzone.ov { background: rgba(214,255,31,.08); outline: 2px dashed var(--acid); outline-offset: -4px; }
+  .tl-un { background: var(--bg-2); border: 1px dashed var(--line); min-height: 140px; }
+  .tl-hint { align-self: center; color: var(--mut); pointer-events: none; padding-left: 6px; }
+  .tl-un-h { display: flex; align-items: center; gap: 16px; margin: 40px 0 14px; }
+  .tl-un-h i { flex: 1; height: 1px; background: var(--line); }
+  .tl-foot { margin-top: 28px; color: var(--mut); line-height: 1.7; font-size: 10px; }
+
+  .tcard { width: 72px; height: 102px; flex-shrink: 0; cursor: grab; position: relative; user-select: none; background: var(--bg); transition: transform .14s, box-shadow .14s; }
+  .tcard:hover { transform: translate(-3px,-3px) rotate(-2deg); box-shadow: 5px 5px 0 var(--tc, var(--acid)); z-index: 2; }
+  .tl-un .tcard:hover { box-shadow: 5px 5px 0 var(--cy); }
+  .tcard.ghost { opacity: .3; transform: scale(.93) !important; box-shadow: none !important; }
+  .tcard img, .tcard .nop { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; pointer-events: none; }
+  .tcard .nop { background: var(--blue); display: flex; align-items: center; justify-content: center; font: 400 10px var(--f-impact); text-transform: uppercase; color: var(--fg); text-align: center; padding: 4px; line-height: 1.2; overflow: hidden; overflow-wrap: anywhere; hyphens: auto; }
+  .tcard .tip { display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--acid); color: var(--bg); padding: 5px 10px; font: 600 13px var(--f-body); white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; pointer-events: none; z-index: 20; }
+  .tcard:hover .tip { display: block; }
+
+  @media (max-width: 760px) {
+    .tl-head { flex-direction: column; align-items: flex-start; background: var(--bg-2); }
+    .tl-head-r { text-align: left; }
+    .tl-count { display: inline-block; }
+    .tl-mobile-actions { display: flex; }
+    .tl-label { width: 56px; padding-right: 8px; }
+    .tl-letter { font-size: 34px; }
+    .tl-jp { display: none; }
+    .tcard { width: 60px; height: 86px; }
+    .dzone { gap: 8px; padding: 10px; min-height: 106px; }
+    .tl-body { padding-left: 3vw; padding-right: 3vw; }
+  }
+  @media (prefers-reduced-motion: reduce) { .tcard, .tcard:hover { transition: none; } }
+`

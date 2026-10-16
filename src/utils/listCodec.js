@@ -93,13 +93,43 @@ export function buildCompareUrl(list) {
   return `${location.origin}${location.pathname}#c=${encodeList(list)}`
 }
 
-/** Parse hash → { type, data } */
+// ── short links: the encoded list is stored in a tiny public key-value service (textdb.dev, no signup);
+//    the link then carries only an 8-char key. If the service is down callers fall back to the long link. ──
+const SHORT_API = 'https://textdb.dev/api/data/'
+const KEY_ALPHABET = 'abcdefghijkmnpqrstuvwxyz23456789'
+const newKey = () => Array.from(crypto.getRandomValues(new Uint8Array(8)), b => KEY_ALPHABET[b % 32]).join('')
+
+/** Upload the list, return a short URL or null (service unreachable). type: 'c' compare | 'p' profile */
+export async function buildShortUrl(list, type = 'c') {
+  const body = encodeList(list)
+  if (!body) return null
+  const key = newKey()
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), 7000)
+  try {
+    const res = await fetch(`${SHORT_API}at-${key}`, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body, signal: ctrl.signal })
+    return res.ok ? `${location.origin}${location.pathname}#${type}=s:${key}` : null
+  } catch { return null } finally { clearTimeout(timer) }
+}
+
+/** Load a list stored by buildShortUrl. -> minimal list | null */
+export async function fetchShared(key) {
+  try {
+    const res = await fetch(`${SHORT_API}at-${encodeURIComponent(key)}`)
+    if (!res.ok) return null
+    return decodeList((await res.text()).trim())
+  } catch { return null }
+}
+
+/** Parse hash → { type, data } | { type, remote } for short links */
 export function parseHash(hash) {
   if (!hash || hash.length < 4) return null
   const h = hash.startsWith('#') ? hash.slice(1) : hash
-  if (h.startsWith('p=')) return { type: 'profile', data: decodeList(h.slice(2)) }
-  if (h.startsWith('c=')) return { type: 'compare', data: decodeList(h.slice(2)) }
-  return null
+  const kind = h.startsWith('p=') ? 'profile' : h.startsWith('c=') ? 'compare' : null
+  if (!kind) return null
+  const body = h.slice(2)
+  if (body.startsWith('s:')) return { type: kind, data: null, remote: body.slice(2) }
+  return { type: kind, data: decodeList(body) }
 }
 
 /**
@@ -112,13 +142,13 @@ export async function shikiFetch(path, opts) {
     try {
       const res = await fetch(host + path, opts)
       if (res.ok) return res
-    } catch {}
+    } catch { /* host unreachable: try the next one */ }
   }
   return null
 }
 
 const GQL_PATH = '/api/graphql'
-const GQL_Q = `query($ids:String!){animes(ids:$ids,limit:50){id name russian licenseNameRu kind episodes episodesAired airedOn{year} genres{russian kind} studios{name}}}`
+const GQL_Q = `query($ids:String!){animes(ids:$ids,limit:50){id name russian licenseNameRu kind episodes episodesAired airedOn{year} poster{mainUrl} genres{russian kind} studios{name}}}`
 
 function pickGenres(genres) {
   if (!genres?.length) return []
@@ -143,7 +173,7 @@ export async function hydrateList(minimalList, onProgress) {
         const data = await res.json()
         for (const a of (data.data?.animes || [])) byId[Number(a.id)] = a
       }
-    } catch {}
+    } catch { /* host unreachable: try the next one */ }
     if (onProgress) onProgress(Math.min(1, (i + 50) / ids.length))
     if (i + 50 < ids.length) await new Promise(r => setTimeout(r, 350))
   }
@@ -156,6 +186,7 @@ export async function hydrateList(minimalList, onProgress) {
       title: full.licenseNameRu || full.russian || full.name,
       genres: pickGenres(full.genres),
       year: full.airedOn?.year || null,
+      poster: full.poster?.mainUrl || null,
       studio: full.studios?.[0]?.name || '—',
       epTotal: full.episodes || null,
       kind: full.kind || 'tv',

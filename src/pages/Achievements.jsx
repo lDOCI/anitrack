@@ -1,156 +1,111 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useState } from 'react'
 import NavBar from '../components/NavBar'
+import { EXTRA_ACHIEVEMENTS, EXTRA_ICONS, extraStats } from './achievementDefs'
+import {
+  Archive, Atom, Award, BadgeCheck, Ban, Bookmark, Bot, Brain, Building2, CalendarClock, CalendarDays, Castle, Cat, Clapperboard, Clock, Coffee, Compass, Cpu, Crown, Diamond, Dices, Dna, DoorOpen, Drama, Droplet, Droplets, Dumbbell, Eye, Fingerprint, Flame, Footprints, Gauge, Gem, Ghost, Gift, Glasses, Globe, GraduationCap, Heart, HeartCrack, HeartHandshake, Hourglass, House, Infinity as InfinityIcon, Landmark, Layers, ListTodo, Lock, LogOut, Mail, Medal, Microscope, Moon, MoonStar, MousePointerClick, Music, Orbit, Package, Palette, Play, Popcorn, Puzzle, Rainbow, Rocket, Scale, Search, ShieldCheck, Siren, Skull, Sofa, Sparkles, Star, Sword, Swords, Telescope, ThumbsDown, Trash2, TreeDeciduous, Truck, Undo2, WandSparkles, Warehouse, Waypoints, Zap,
+} from 'lucide-react'
 
 const STORAGE_KEY = 'anitrack_list'
 const SEEN_KEY    = 'anitrack_achievements_seen'
 
-// ─── SVG иконки — Уникальный Художественный Скетч-стиль ────────────────────────
-export function AchIcon({ id, size = 36, color = '#0a0a0a' }) {
-  const s = { width: size, height: size, display: 'block', flexShrink: 0 }
-  
-  // Плавные, чистые линии, как от линера
-  const lineProps = { fill: 'none', stroke: color, strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }
-  // Сдвинутая заливка для эффекта "ручного раскрашивания маркером"
-  const fillProps = { fill: color, fillOpacity: 0.15, stroke: 'none', transform: 'translate(-2, 3)' }
+// ─── Иконки: набор lucide, по одной смысловой иконке на ачивку ────────────────────
+const ICONS = {
+  ep_50: Play,
+  ep_100: Sofa,
+  ep_500: Popcorn,
+  ep_1000: Flame,
+  ep_2000: Eye,
+  ep_5000: Orbit,
+  ep_10000: InfinityIcon,
+  h_10: Moon,
+  h_24: Clock,
+  h_50: Coffee,
+  h_100: Hourglass,
+  h_200: MoonStar,
+  h_500: Ghost,
+  h_1000: Dna,
+  h_2000: Atom,
+  titles_1: Footprints,
+  titles_5: Bookmark,
+  titles_10: Landmark,
+  titles_25: Layers,
+  titles_50: Archive,
+  titles_100: Castle,
+  titles_200: Glasses,
+  titles_250: Award,
+  titles_500: Crown,
+  ecchi_1: MousePointerClick,
+  ecchi_5: Microscope,
+  ecchi_20: Droplets,
+  ecchi_50: GraduationCap,
+  isekai_1: Truck,
+  isekai_5: Siren,
+  isekai_15: DoorOpen,
+  isekai_30: Sword,
+  isekai_50: Globe,
+  mecha_3: Bot,
+  mecha_10: Cpu,
+  mecha_25: Rocket,
+  romance_5: Heart,
+  romance_10: HeartHandshake,
+  romance_30: HeartCrack,
+  romance_50: Mail,
+  sol_5: Coffee,
+  sol_10: Cat,
+  sol_25: House,
+  psycho_3: Brain,
+  psycho_5: Puzzle,
+  psycho_15: Fingerprint,
+  psycho_30: Waypoints,
+  action_10: Zap,
+  action_25: Flame,
+  action_50: Swords,
+  horror_3: Droplet,
+  horror_5: Ghost,
+  horror_15: Skull,
+  sports_5: Dumbbell,
+  sports_15: Medal,
+  fantasy_10: WandSparkles,
+  fantasy_25: Gem,
+  score_first: Star,
+  score_ten: Sparkles,
+  score_all10: Diamond,
+  score_many10: Award,
+  score_low: ThumbsDown,
+  score_critic: Scale,
+  score_generous: Gift,
+  score_variety: Palette,
+  drop_1: LogOut,
+  drop_5: Trash2,
+  drop_20: Ban,
+  planned_10: ListTodo,
+  planned_hoarder: Package,
+  planned_100: Warehouse,
+  ongoing_watcher: CalendarClock,
+  no_drop: ShieldCheck,
+  no_drop_100: BadgeCheck,
+  season_collector: CalendarDays,
+  season_master: TreeDeciduous,
+  genre_explorer: Compass,
+  genre_master: Rainbow,
+  speed_watcher: Gauge,
+  secret_studio: Building2,
+  secret_contrarian: Undo2,
+  secret_cinephile: Clapperboard,
+  secret_music: Music,
+  secret_detective: Search,
+  secret_telescope: Telescope,
+  secret_dice: Dices,
+  secret_mask: Drama,
+  lock: Lock,
+}
 
-  // 87 уникальных иконок, привязанных строго к ID ачивки
-  const paths = {
-    // ── Эпизоды
-    ep_50:      <><rect x="4" y="8" width="24" height="15" rx="3"/><polyline points="12,2 16,8 20,2"/><line x1="8" y1="23" x2="16" y2="23"/><line x1="20" y1="23" x2="24" y2="23"/></>,
-    ep_100:     <><path d="M4 14v8h24v-8a2 2 0 00-2-2H6a2 2 0 00-2 2z"/><path d="M4 22h24v4H4z"/><line x1="10" y1="12" x2="10" y2="22"/><line x1="22" y1="12" x2="22" y2="22"/></>,
-    ep_500:     <><rect x="10" y="4" width="12" height="24" rx="3"/><circle cx="16" cy="10" r="2"/><polygon points="14,16 14,22 19,19"/></>,
-    ep_1000:    <><path d="M16 16m-2 0a2 2 0 1 1 4 0a4 4 0 1 1 -8 0a6 6 0 1 1 12 0a8 8 0 1 1 -16 0a10 10 0 1 1 20 0"/></>,
-    ep_2000:    <><path d="M3 16 C 3 16 10 8 16 8 C 22 8 29 16 29 16 C 29 16 22 24 16 24 C 10 24 3 16 3 16 Z"/><rect x="14" y="14" width="4" height="4"/></>,
-    ep_5000:    <><circle cx="16" cy="16" r="10" strokeDasharray="5 4"/><circle cx="16" cy="16" r="3"/></>,
-    ep_10000:   <><path d="M6 12h20v8H6z"/><circle cx="16" cy="16" r="2"/><path d="M26 14l4 2-4 2M6 14l-4 2 4 2"/></>,
-
-    // ── Часы
-    h_10:       <><path d="M16 4 A 12 12 0 0 0 16 28 A 8 8 0 0 1 16 4 Z"/></>,
-    h_24:       <><circle cx="16" cy="16" r="12"/><line x1="16" y1="16" x2="16" y2="8"/><line x1="16" y1="16" x2="22" y2="16"/></>,
-    h_50:       <><path d="M8 10h12v10a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V10z"/><path d="M20 12h2a3 3 0 0 1 0 6h-2"/></>,
-    h_100:      <><path d="M8 10h12v10a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V10z"/><path d="M20 12h2a3 3 0 0 1 0 6h-2"/><path d="M10 4q2 3-2 6M16 4q2 3-2 6"/></>,
-    h_200:      <><path d="M6 10 L 10 6 L 14 10 L 18 6 L 22 10 L 26 6 V 26 H 6 Z"/><circle cx="12" cy="16" r="2"/><circle cx="20" cy="16" r="2"/></>,
-    h_500:      <><rect x="12" y="6" width="8" height="14" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="16" y1="20" x2="16" y2="30"/><path d="M12 14h8"/></>,
-    h_1000:     <><path d="M10 4 C 10 16, 22 16, 22 28"/><path d="M22 4 C 22 16, 10 16, 10 28"/><line x1="12" y1="10" x2="20" y2="10"/><line x1="12" y1="22" x2="20" y2="22"/></>,
-    h_2000:     <><circle cx="16" cy="16" r="8"/><path d="M2 20 C 6 14 24 10 30 16"/></>,
-
-    // ── Тайтлы
-    titles_1:   <><path d="M8 6h12v20H8z"/><line x1="12" y1="6" x2="12" y2="26"/></>,
-    titles_5:   <><rect x="6" y="20" width="20" height="4"/><rect x="8" y="16" width="16" height="4"/><rect x="10" y="12" width="12" height="4"/></>,
-    titles_10:  <><rect x="6" y="8" width="6" height="16" rx="1"/><rect x="14" y="10" width="6" height="14" rx="1"/><rect x="22" y="6" width="6" height="18" rx="1"/><line x1="2" y1="24" x2="30" y2="24"/></>,
-    titles_25:  <><polyline points="4,24 12,16 20,20 28,8"/><polyline points="28,14 28,8 22,8"/></>,
-    titles_50:  <><path d="M6 12l10-6 10 6v12l-10 6-10-6z"/><line x1="16" y1="6" x2="16" y2="18"/><line x1="6" y1="12" x2="16" y2="18"/><line x1="26" y1="12" x2="16" y2="18"/></>,
-    titles_100: <><path d="M8 18c0-8 16-8 16 0"/><path d="M6 18h20v4H6z"/><path d="M12 10l-4-6M20 10l4-6"/></>,
-    titles_200: <><path d="M4 8h24M6 14h20M10 8v20M22 8v20M10 18h12"/></>,
-    titles_250: <><path d="M4 10 L 16 26 L 28 10 A 16 16 0 0 0 4 10"/><line x1="16" y1="26" x2="10" y2="10"/><line x1="16" y1="26" x2="22" y2="10"/></>,
-    titles_500: <><path d="M8 6h16v6a8 8 0 0 1-16 0V6zM16 20v6M10 26h12"/><path d="M8 10H4v-2h4M24 10h4v-2h-4"/></>,
-
-    // ── Этти
-    ecchi_1:    <><circle cx="16" cy="14" r="4"/><path d="M14 17l-2 5h8l-2-5"/></>,
-    ecchi_5:    <><line x1="6" y1="14" x2="10" y2="10"/><line x1="10" y1="16" x2="14" y2="12"/><line x1="18" y1="12" x2="22" y2="16"/><line x1="22" y1="10" x2="26" y2="14"/></>,
-    ecchi_20:   <><path d="M16 26 C 6 26 4 16 4 10 C 4 4 16 8 16 8 C 16 8 28 4 28 10 C 28 16 26 26 16 26 Z"/><line x1="16" y1="8" x2="16" y2="16"/></>,
-    ecchi_50:   <><path d="M16 16c4 0 8 4 8 8M16 16c-4 0-8 4-8 8M14 10l-4-6-2 4M18 10l4-6 2 4"/></>,
-
-    // ── Исекай
-    isekai_1:   <><rect x="12" y="6" width="8" height="20" rx="4"/><circle cx="16" cy="10" r="2"/><circle cx="16" cy="16" r="2"/><circle cx="16" cy="22" r="2"/></>,
-    isekai_5:   <><path d="M4 14h18l4 6v6H4V14zM16 14v6"/><circle cx="8" cy="26" r="3"/><circle cx="24" cy="26" r="3"/></>,
-    isekai_15:  <><ellipse cx="16" cy="16" rx="6" ry="12"/><path d="M10 16a6 12 0 0 0 12 0"/><circle cx="16" cy="16" r="2"/></>,
-    isekai_30:  <><path d="M12 20 L 26 6 L 28 8 L 14 22 M 10 18 L 16 24 M 14 22 L 6 30"/></>,
-    isekai_50:  <><circle cx="16" cy="16" r="10"/><path d="M16 6c-4 4-4 16 0 20M16 6c4 4 4 16 0 20M6 16h20"/></>,
-
-    // ── Меха
-    mecha_3:    <><path d="M12 12a4 4 0 1 0 8 0 4 4 0 1 0-8 0"/><line x1="6" y1="26" x2="13" y2="15"/><line x1="26" y1="6" x2="19" y2="10"/></>,
-    mecha_10:   <><rect x="8" y="12" width="16" height="14" rx="2"/><line x1="12" y1="18" x2="20" y2="18"/><path d="M16 12 L 16 4 M 10 6 L 16 10 L 22 6"/></>,
-    mecha_25:   <><path d="M4 24L12 8h8l8 16"/><circle cx="16" cy="16" r="4"/><line x1="16" y1="16" x2="16" y2="20"/></>,
-
-    // ── Романтика
-    romance_5:  <><path d="M16 26 C 16 26 4 18 4 10 C 4 6 10 4 16 10 C 22 4 28 6 28 10 C 28 18 16 26 16 26 Z"/></>,
-    romance_10: <><path d="M12 20 C 2 12 6 4 12 8 C 18 4 22 12 12 20"/><path d="M20 20 C 10 12 14 4 20 8 C 26 4 30 12 20 20"/></>,
-    romance_30: <><path d="M16 26 C 16 26 4 18 4 10 C 4 6 10 4 16 10 C 22 4 28 6 28 10 C 28 18 16 26 16 26 Z"/><path d="M16 10 L 14 16 L 18 20 L 16 26"/></>,
-    romance_50: <><rect x="4" y="8" width="24" height="16" rx="2"/><path d="M4 8l12 8l12-8"/><circle cx="16" cy="16" r="3"/></>,
-
-    // ── Повседневность
-    sol_5:      <><path d="M6 14 h 20 l -2 12 h -16 z"/><path d="M14 6 C 14 6 14 10 18 10 C 18 10 18 6 14 6 Z"/></>,
-    sol_10:     <><circle cx="10" cy="16" r="4"/><circle cx="16" cy="16" r="4"/><circle cx="22" cy="16" r="4"/><line x1="4" y1="16" x2="28" y2="16"/></>,
-    sol_25:     <><path d="M6 14h20v8H6z"/><rect x="8" y="10" width="16" height="4"/><line x1="10" y1="22" x2="10" y2="26"/><line x1="22" y1="22" x2="22" y2="26"/></>,
-
-    // ── Психология
-    psycho_3:   <><path d="M16 6 C 10 6 6 10 6 16 C 6 22 10 26 16 26 C 22 26 26 22 26 16 C 26 10 22 6 16 6 Z"/><path d="M16 6 Q 12 16 16 26"/></>,
-    psycho_5:   <><rect x="8" y="8" width="16" height="16"/><circle cx="16" cy="8" r="3"/><circle cx="24" cy="16" r="3"/></>,
-    psycho_15:  <><line x1="16" y1="4" x2="16" y2="16"/><circle cx="16" cy="20" r="4"/><circle cx="16" cy="20" r="1"/></>,
-    psycho_30:  <><path d="M16 4 L 28 10 L 22 26 L 8 20 Z"/><path d="M16 4 L 14 16 L 8 20 M 14 16 L 22 26 M 14 16 L 28 10"/></>,
-
-    // ── Экшен
-    action_10:  <><path d="M6 16h6M20 16h6M10 10l2 2M22 10l-2 2M10 22l2-2M22 22l-2-2"/></>,
-    action_25:  <><path d="M16 4 C 16 4 26 14 26 20 C 26 26 20 30 16 30 C 12 30 6 26 6 20 C 6 14 16 4 16 4 Z"/></>,
-    action_50:  <><path d="M4 28 C 12 28 20 20 28 4"/><line x1="20" y1="12" x2="24" y2="16"/><line x1="18" y1="14" x2="22" y2="18"/></>,
-
-    // ── Хоррор
-    horror_3:   <><path d="M16 8 C 16 8 10 18 10 22 C 10 26 13 28 16 28 C 19 28 22 26 22 22 C 22 18 16 8 16 8 Z"/></>,
-    horror_5:   <><path d="M8 26 L 8 12 C 8 6 24 6 24 12 L 24 26 L 20 22 L 16 26 L 12 22 Z"/><circle cx="12" cy="12" r="1"/><circle cx="20" cy="12" r="1"/></>,
-    horror_15:  <><path d="M10 14 C 10 8 22 8 22 14 V 20 H 10 Z M 12 20 V 24 M 16 20 V 24 M 20 20 V 24"/></>,
-
-    // ── Спорт
-    sports_5:   <><rect x="8" y="12" width="16" height="10" rx="4"/><line x1="24" y1="16" x2="28" y2="16"/><circle cx="14" cy="16" r="2"/></>,
-    sports_15:  <><circle cx="16" cy="18" r="6"/><path d="M12 12 L 10 4 L 16 8 L 22 4 L 20 12"/></>,
-
-    // ── Фэнтези
-    fantasy_10: <><line x1="8" y1="28" x2="24" y2="12"/><circle cx="24" cy="12" r="4"/><path d="M24 4l-2 4M30 12l-4 2"/></>,
-    fantasy_25: <><path d="M4 16 C 10 8 22 8 28 16 C 22 24 10 24 4 16 Z"/><ellipse cx="16" cy="16" rx="2" ry="6"/></>,
-
-    // ── Оценки
-    score_first:   <><path d="M16 4 L 20 12 L 28 14 L 22 20 L 24 28 L 16 24 L 8 28 L 10 20 L 4 14 L 12 12 Z"/></>,
-    score_ten:     <><path d="M16 6 L 18 12 L 24 12 L 20 16 L 22 22 L 16 18 L 10 22 L 12 16 L 8 12 L 14 12 Z"/><line x1="16" y1="2" x2="16" y2="4"/><line x1="16" y1="28" x2="16" y2="30"/><line x1="2" y1="16" x2="4" y2="16"/><line x1="28" y1="16" x2="30" y2="16"/></>,
-    score_all10:   <><path d="M16 4l1 3h3l-2 2 1 3-3-2-3 2 1-3-2-2h3z M8 12l1 3h3l-2 2 1 3-3-2-3 2 1-3-2-2h3z M24 12l1 3h3l-2 2 1 3-3-2-3 2 1-3-2-2h3z"/></>,
-    score_many10:  <><path d="M16 2 L 28 10 L 16 30 L 4 10 Z M 4 10 L 28 10 M 10 10 L 16 30 M 22 10 L 16 30"/></>,
-    score_low:     <><path d="M10 8 V 26 H 22 V 8 M 6 8 H 26 M 14 4 H 18"/></>,
-    score_critic:  <><circle cx="10" cy="16" r="4"/><circle cx="22" cy="16" r="4"/><line x1="14" y1="16" x2="18" y2="16"/><line x1="26" y1="16" x2="30" y2="12"/></>,
-    score_generous:<><path d="M10 16 A 2 2 0 0 1 14 16 L 12 20 Z M 22 16 A 2 2 0 0 1 26 16 L 24 20 Z"/></>,
-    score_variety: <><path d="M16 4 C 8 4 4 10 4 16 C 4 22 10 28 16 28 C 22 28 28 22 28 16 C 28 10 22 8 16 8"/><circle cx="10" cy="16" r="2"/></>,
-
-    // ── Поведение
-    drop_1:           <><path d="M8 28 V 6 H 24 V 28 M 14 16 H 16"/></>,
-    drop_5:           <><path d="M4 24 H 26 A 2 2 0 0 0 28 22 V 16 C 28 12 22 12 18 12 H 10 L 4 24"/></>,
-    drop_20:          <><path d="M8 28 V 12 C 8 6 24 6 24 12 V 28"/><line x1="4" y1="28" x2="28" y2="28"/><line x1="16" y1="12" x2="16" y2="20"/><line x1="12" y1="16" x2="20" y2="16"/></>,
-    planned_10:       <><rect x="8" y="6" width="16" height="22" rx="2"/><path d="M12 4 H 20 V 8 H 12 Z"/><line x1="12" y1="14" x2="20" y2="14"/><line x1="12" y1="18" x2="16" y2="18"/></>,
-    planned_hoarder:  <><rect x="6" y="10" width="16" height="16"/><rect x="10" y="6" width="16" height="16"/></>,
-    planned_100:      <><path d="M6 10 H 26 V 22 H 6 Z M 4 8 H 28 M 4 24 H 28"/></>,
-    ongoing_watcher:  <><path d="M10 4 H 22 L 16 16 L 22 28 H 10 L 16 16 Z"/></>,
-    no_drop:          <><path d="M16 4 L 26 8 V 16 C 26 22 16 28 16 28 C 16 28 6 22 6 16 V 8 Z"/></>,
-    no_drop_100:      <><path d="M16 4 L 26 8 V 16 C 26 22 16 28 16 28 C 16 28 6 22 6 16 V 8 Z"/><path d="M10 14 L 14 18 L 22 10"/></>,
-    season_collector: <><rect x="6" y="8" width="20" height="18" rx="2"/><line x1="10" y1="4" x2="10" y2="8"/><line x1="22" y1="4" x2="22" y2="8"/><line x1="6" y1="14" x2="26" y2="14"/></>,
-    season_master:    <><path d="M16 28 V 16 M 16 16 L 10 10 M 16 16 L 22 10 M 16 16 L 16 8"/></>,
-    genre_explorer:   <><circle cx="16" cy="16" r="10"/><path d="M16 10 L 18 16 L 16 22 L 14 16 Z"/></>,
-    genre_master:     <><path d="M4 26 A 12 12 0 0 1 28 26 M 8 26 A 8 8 0 0 1 24 26 M 12 26 A 4 4 0 0 1 20 26"/></>,
-    speed_watcher:    <><polygon points="18,2 8,16 15,16 13,30 24,14 16,14"/></>,
-
-    // ── Секретные
-    secret_studio:    <><rect x="8" y="10" width="16" height="22"/><rect x="12" y="4" width="8" height="6"/><line x1="12" y1="16" x2="14" y2="16"/><line x1="18" y1="16" x2="20" y2="16"/></>,
-    secret_contrarian:<><path d="M8 12 Q 16 4 24 12 C 24 20 16 28 16 28 C 16 28 8 20 8 12 Z"/><path d="M12 16 Q 16 20 20 16"/></>,
-    secret_cinephile: <><rect x="4" y="8" width="24" height="16" rx="2"/><line x1="10" y1="8" x2="10" y2="24"/><line x1="22" y1="8" x2="22" y2="24"/></>,
-    secret_music:     <><path d="M12 22 A 3 3 0 1 1 12 16 V 6 L 24 4 V 18 A 3 3 0 1 1 24 12 V 8 L 12 10"/></>,
-    secret_detective: <><path d="M6 16 C 6 10 26 10 26 16"/><rect x="10" y="8" width="12" height="8"/><line x1="4" y1="16" x2="28" y2="16"/></>,
-    secret_telescope: <><path d="M4 22 L 24 8 L 28 12 L 8 26 Z M 16 14 L 14 28 M 20 10 L 26 26"/></>,
-    secret_dice:      <><rect x="6" y="6" width="20" height="20" rx="4"/><circle cx="10" cy="10" r="1.5"/><circle cx="22" cy="22" r="1.5"/><circle cx="16" cy="16" r="1.5"/></>,
-    secret_mask:      <><path d="M6 10 L 8 4 L 12 8 L 20 8 L 24 4 L 26 10 C 26 20 16 28 16 28 C 16 28 6 20 6 10 Z"/><path d="M10 14 L 14 16 M 22 14 L 18 16"/></>,
-    
-    lock:             <><rect x="8" y="14" width="16" height="12" rx="2"/><path d="M12 14 V 10 A 4 4 0 0 1 20 10 V 14"/></>,
-  }
-
-  const content = paths[id] || paths.lock
-
+export function AchIcon({ id, size = 36, color = '#f4f4ff' }) {
+  const Icon = ICONS[id] || EXTRA_ICONS[id] || Award
   return (
-    <span style={{ width: size, height: size, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-      <svg width={size} height={size} viewBox="0 0 32 32" style={{ display: 'block' }}>
-        {/* Задний цветной сдвиг (эффект акварели/маркера) */}
-        <g {...fillProps}>
-          {content}
-        </g>
-        {/* Чистый, красивый контур */}
-        <g {...lineProps}>
-          {content}
-        </g>
-      </svg>
+    <span aria-hidden="true" style={{ width: size, height: size, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <Icon size={size} color={color} strokeWidth={1.75} />
     </span>
   )
 }
@@ -276,22 +231,29 @@ export const ACHIEVEMENTS = [
   { id: 'secret_telescope', name: 'Астроном фанатизма',  desc: 'Секретная: 1500+ часов',                check: s => s.totalHours >= 1500,     xp: 250, secret: true },
   { id: 'secret_dice',      name: 'Рандомный вкус',      desc: 'Секретная: тайтл с оценкой 1 и 10',    check: s => s.hasScore1 && s.score10count >= 1, xp: 25, secret: true },
   { id: 'secret_mask',      name: 'Театральный',         desc: 'Секретная: 15 тайтлов драма',           check: s => (s.genreCounts['Драма']||0) >= 15, xp: 30, secret: true },
+
+  // ── Длинный хвост (src/pages/achievementDefs.js) ─────────
+  ...EXTRA_ACHIEVEMENTS,
 ]
 
 // ─── Уровни ───────────────────────────────────────────────────────────────────
 export const LEVELS = [
-  { level: 1,  xp: 0,    title: 'Новичок',            jp: '初心者',   color: '#9ca3af' },
-  { level: 2,  xp: 25,   title: 'Любопытный',          jp: '好奇心',   color: '#6b7280' },
-  { level: 3,  xp: 60,   title: 'Увлечённый',          jp: '熱中者',   color: '#4b5563' },
-  { level: 4,  xp: 110,  title: 'Фанат',               jp: 'ファン',   color: '#1e40af' },
-  { level: 5,  xp: 185,  title: 'Знаток',              jp: '知識者',   color: '#1d4ed8' },
-  { level: 6,  xp: 290,  title: 'Отаку',               jp: 'オタク',   color: '#166534' },
-  { level: 7,  xp: 430,  title: 'Хардкор-отаку',       jp: '本格オタ', color: '#15803d' },
-  { level: 8,  xp: 620,  title: 'Легенда дивана',      jp: '伝説',     color: '#a16207' },
-  { level: 9,  xp: 870,  title: 'Мастер аниме',        jp: '達人',     color: '#b45309' },
-  { level: 10, xp: 1200, title: 'Живая энциклопедия',  jp: '大師匠',   color: '#d62828' },
-  { level: 11, xp: 1600, title: 'Бог аниме',           jp: '神',       color: '#b91c1c' },
-  { level: 12, xp: 2200, title: 'Запредельный',        jp: '超越者',   color: '#7c2d12' },
+  { level: 1,  xp: 0,    title: 'Новичок',            jp: '初心者',   color: '#8d8db3' },
+  { level: 2,  xp: 25,   title: 'Любопытный',          jp: '好奇心',   color: '#a7b0ff' },
+  { level: 3,  xp: 60,   title: 'Увлечённый',          jp: '熱中者',   color: '#7b86ff' },
+  { level: 4,  xp: 110,  title: 'Фанат',               jp: 'ファン',   color: '#27e1ff' },
+  { level: 5,  xp: 185,  title: 'Знаток',              jp: '知識者',   color: '#3fd0b5' },
+  { level: 6,  xp: 290,  title: 'Отаку',               jp: 'オタク',   color: '#7dff9a' },
+  { level: 7,  xp: 430,  title: 'Хардкор-отаку',       jp: '本格オタ', color: '#b6ff3d' },
+  { level: 8,  xp: 620,  title: 'Легенда дивана',      jp: '伝説',     color: '#d6ff1f' },
+  { level: 9,  xp: 870,  title: 'Мастер аниме',        jp: '達人',     color: '#ffc61f' },
+  { level: 10, xp: 1200, title: 'Живая энциклопедия',  jp: '大師匠',   color: '#ff8a1f' },
+  { level: 11, xp: 1600, title: 'Бог аниме',           jp: '神',       color: '#ff2d87' },
+  { level: 12, xp: 2200, title: 'Запредельный',        jp: '超越者',   color: '#ff6ab0' },
+  { level: 13, xp: 3200, title: 'Хранитель архива',    jp: '館長',     color: '#ff8fd0' },
+  { level: 14, xp: 4500, title: 'Вне времени',         jp: '永遠',     color: '#c28bff' },
+  { level: 15, xp: 6200, title: 'Аниме-божество',      jp: '神仏',     color: '#8f9bff' },
+  { level: 16, xp: 8500, title: 'Первоисточник',       jp: '原点',     color: '#6ee7ff' },
 ]
 
 export function getLevelInfo(xp) {
@@ -362,6 +324,7 @@ export function computeStats(list) {
     hasScore1, scoredCount, allScoresUsed,
     topStudioCount, hasLongCompleted, uniqueGenres,
     movieCount, maxSeasonsOneSeries,
+    ...extraStats(list),
   }
 }
 
@@ -386,98 +349,87 @@ export default function Achievements({ navigate }) {
   const totalXp  = ACHIEVEMENTS.filter(a => earned.has(a.id)).reduce((s, a) => s + a.xp, 0)
   const { current: lvl, next: nextLvl, xpInLevel, xpToNext, progress } = getLevelInfo(totalXp)
 
-  const F = "'Space Grotesk', sans-serif"
-  const B = "'Bangers', sans-serif"
-  const N = "'Noto Sans', sans-serif"
-  const J = "'Noto Sans JP', sans-serif"
+  const pct = Math.round((earnedCount / ACHIEVEMENTS.length) * 100)
 
   return (
-    <div style={{ background: '#f0ede6', minHeight: '100vh' }}>
-
-      {/* Dot overlay */}
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, opacity: 0.025, backgroundImage: 'radial-gradient(circle,#000 1px,transparent 1px)', backgroundSize: '5px 5px' }} />
-
+    <div className="ac">
       <NavBar active="achievements" onNavigate={navigate} rightContent={
-        <span style={{ fontFamily: B, fontSize: 16, color: '#0a0a0a', letterSpacing: '0.04em' }}>
-          {earnedCount}<span style={{ color: '#aaa', fontSize: 12 }}>/{ACHIEVEMENTS.length}</span>
+        <span className="t-impact" style={{ fontSize: 20, color: 'var(--acid)' }}>
+          {earnedCount}<span style={{ color: 'var(--mut)', fontSize: 13 }}>/{ACHIEVEMENTS.length}</span>
         </span>
       } />
 
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '72px 16px 20px', position: 'relative', zIndex: 1 }}>
-
-        {/* Level card */}
-        <div style={{ background: '#fff', border: '3px solid #0a0a0a', padding: '20px 24px', marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', fontFamily: B, fontSize: 130, color: 'rgba(10,10,10,0.04)', lineHeight: 1, userSelect: 'none', pointerEvents: 'none' }}>{lvl.level}</div>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, position: 'relative' }}>
-            <div style={{ flexShrink: 0, width: 68, height: 68, background: lvl.color, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '3px solid #0a0a0a' }}>
-              <span style={{ fontFamily: B, fontSize: 30, color: '#fff', lineHeight: 1, letterSpacing: '0.04em' }}>{lvl.level}</span>
-              <span style={{ fontFamily: J, fontSize: 8, color: 'rgba(255,255,255,0.7)' }}>レベル</span>
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 3, flexWrap: 'wrap' }}>
-                <span style={{ fontFamily: N, fontWeight: 900, fontStyle: 'italic', fontSize: 24, color: lvl.color, lineHeight: 1 }}>{lvl.title}</span>
-                <span style={{ fontFamily: J, fontSize: 13, color: '#bbb' }}>{lvl.jp}</span>
-              </div>
-              <div style={{ fontFamily: F, fontSize: 11, color: '#888', fontWeight: 600, marginBottom: 12 }}>{totalXp} XP · {earnedCount} из {ACHIEVEMENTS.length} ачивок</div>
-              {nextLvl ? (<>
-                <div style={{ height: 8, background: 'rgba(10,10,10,0.08)', position: 'relative', marginBottom: 6 }}>
-                  <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', background: lvl.color, width: `${progress * 100}%`, transition: 'width 1s cubic-bezier(0.16,1,0.3,1)' }} />
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: '#aaa' }}>{xpInLevel} / {xpToNext} XP до уровня {nextLvl.level}</span>
-                  <span style={{ fontFamily: N, fontWeight: 900, fontStyle: 'italic', fontSize: 11, color: nextLvl.color }}>→ {nextLvl.title}</span>
-                </div>
-              </>) : (
-                <div style={{ fontFamily: N, fontWeight: 900, fontStyle: 'italic', fontSize: 13, color: '#d62828' }}>Максимальный уровень достигнут</div>
-              )}
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 4, marginTop: 16, paddingTop: 14, borderTop: '1px solid rgba(10,10,10,0.07)', flexWrap: 'wrap' }}>
-            {LEVELS.map(l => {
-              const done = totalXp >= l.xp, isCur = l.level === lvl.level
-              return <div key={l.level} title={`${l.title} · ${l.xp} XP`} style={{ width: 28, height: 28, background: done ? l.color : 'rgba(10,10,10,0.06)', border: isCur ? '2px solid #0a0a0a' : '2px solid transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: B, fontSize: 12, color: done ? '#fff' : '#ccc', boxShadow: isCur ? '2px 2px 0 #0a0a0a' : 'none', cursor: 'default' }}>{l.level}</div>
-            })}
-          </div>
+      {/* ═════ LEVEL HERO ═════ */}
+      <section className="ac-hero" style={{ '--lc': lvl.color }}>
+        <div className="scan" />
+        <div className="ac-lv" aria-label={`Уровень ${lvl.level}`}>
+          <span className="t-hud" style={{ color: 'var(--lc)' }}>// уровень · レベル</span>
+          <span className="t-impact ac-lv-n">{lvl.level}</span>
         </div>
+        <div className="ac-info">
+          <h1 className="t-head ac-title">{lvl.title}</h1>
+          <div className="t-jp ac-jp">{lvl.jp}</div>
+          <div className="t-hud ac-meta">{totalXp} XP · {earnedCount} из {ACHIEVEMENTS.length} ачивок · {pct}%</div>
+          {nextLvl ? (<>
+            <div className="ac-segs" role="img" aria-label={`${Math.round(progress * 100)}% до следующего уровня`}>
+              {Array.from({ length: 20 }, (_, i) => <i key={i} className={i < Math.round(progress * 20) ? 'f' : ''} />)}
+            </div>
+            <div className="ac-next">
+              <span className="t-hud" style={{ color: 'var(--mut)' }}>{xpInLevel} / {xpToNext} XP до уровня {nextLvl.level}</span>
+              <span className="t-hud" style={{ color: nextLvl.color }}>→ {nextLvl.title}</span>
+            </div>
+          </>) : (
+            <div className="t-hud" style={{ color: 'var(--acid)', marginTop: 18 }}>Максимальный уровень достигнут</div>
+          )}
+        </div>
+      </section>
 
-        {/* Filters */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
+      {/* ═════ LADDER ═════ */}
+      <section className="ac-ladder">
+        <div className="ac-ladder-in">
+          {LEVELS.map(l => {
+            const done = totalXp >= l.xp, isCur = l.level === lvl.level
+            return (
+              <div key={l.level} title={`${l.title} · ${l.xp} XP`} className={`ac-step${done ? ' done' : ''}${isCur ? ' cur' : ''}`} style={{ '--sc': l.color }}>
+                <span>{l.level}</span>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* ═════ FILTERS + LIST ═════ */}
+      <section className="ac-main">
+        <div className="t-hud" style={{ color: 'var(--cy)', marginBottom: 16 }}>// 実績</div>
+        <div className="ac-filters" role="group" aria-label="Фильтр ачивок">
           {[['all','Все'],['earned',`Получено (${earnedCount})`],['locked','Заблокировано']].map(([k,l]) => (
-            <button key={k} onClick={() => setFilter(k)}
-              style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '6px 16px', background: filter===k ? '#0a0a0a' : 'none', border: `2px solid ${filter===k ? '#0a0a0a' : '#ddd'}`, cursor: 'pointer', color: filter===k ? '#f0ede6' : '#bbb' }}
-              onMouseEnter={e => { if(filter!==k){e.currentTarget.style.borderColor='#0a0a0a';e.currentTarget.style.color='#0a0a0a'} }}
-              onMouseLeave={e => { if(filter!==k){e.currentTarget.style.borderColor='#ddd';e.currentTarget.style.color='#bbb'} }}
-            >{l}</button>
+            <button key={k} onClick={() => setFilter(k)} aria-pressed={filter===k} className={filter===k ? 'on' : ''}><span>{l}</span></button>
           ))}
         </div>
 
-        {/* Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 6 }}>
+        <div className="ac-grid">
           {visible.map(a => {
             const isEarned = earned.has(a.id)
             const isSecret = a.secret && !isEarned
             return (
-              <div key={a.id}
-                style={{ background: '#fff', border: `2px solid ${isEarned ? 'rgba(10,10,10,0.25)' : 'rgba(10,10,10,0.08)'}`, padding: '14px', display: 'flex', alignItems: 'center', gap: 14, position: 'relative', overflow: 'hidden', minHeight: 88, opacity: isEarned ? 1 : 0.4, transition: 'transform 0.12s, box-shadow 0.12s, border-color 0.12s' }}
-                onMouseEnter={e => { if(isEarned){e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='4px 4px 0 #0a0a0a';e.currentTarget.style.borderColor='#0a0a0a'} }}
-                onMouseLeave={e => { e.currentTarget.style.transform='';e.currentTarget.style.boxShadow='';e.currentTarget.style.borderColor=isEarned?'rgba(10,10,10,0.25)':'rgba(10,10,10,0.08)' }}
-              >
-                {/* Icon box (Теперь использует a.id вместо a.icon) */}
-                <div style={{ flexShrink: 0, width: 60, height: 60, background: '#f0ede6', border: `2px solid ${isEarned ? '#0a0a0a' : 'rgba(10,10,10,0.12)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <AchIcon id={isSecret ? 'lock' : a.id} size={34} color={isEarned ? '#0a0a0a' : '#a8a5a0'} />
+              <div key={a.id} className={`ac-card${isEarned ? ' earned' : ''}`}>
+                <div className="ac-ico">
+                  <AchIcon id={isSecret ? 'lock' : a.id} size={36} color={isEarned ? '#07070e' : '#8d8db3'} />
                 </div>
-                {/* Text */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: N, fontWeight: 900, fontStyle: 'italic', fontSize: 14, color: '#0a0a0a', lineHeight: 1.25, marginBottom: 3, filter: isSecret ? 'blur(5px)' : 'none', userSelect: isSecret ? 'none' : 'auto' }}>
+                <div className="ac-txt">
+                  <div className="ac-name" style={isSecret ? { filter: 'blur(5px)', userSelect: 'none' } : undefined}>
                     {isSecret ? '???????????' : a.name}
                   </div>
-                  <div style={{ fontFamily: F, fontSize: 11, color: '#888', fontWeight: 600, lineHeight: 1.4, filter: isSecret ? 'blur(4px)' : 'none' }}>
+                  <div className="ac-desc" style={isSecret ? { filter: 'blur(4px)' } : undefined}>
                     {isSecret ? 'Секретная ачивка' : a.desc}
                   </div>
-                  <span style={{ fontFamily: B, fontSize: 14, letterSpacing: '0.06em', color: isEarned ? '#166534' : '#c0bdb8', marginTop: 5, display: 'block' }}>+{a.xp} XP</span>
                 </div>
-                {isEarned && <div style={{ position: 'absolute', top: 0, right: 0, fontFamily: B, fontSize: 9, letterSpacing: '0.08em', background: '#0a0a0a', color: '#f0ede6', padding: '2px 8px' }}>✓ ПОЛУЧЕНО</div>}
-                {isSecret  && <div style={{ position: 'absolute', top: 0, right: 0, fontFamily: B, fontSize: 9, letterSpacing: '0.06em', background: '#92400e', color: '#fff', padding: '2px 8px' }}>СЕКРЕТ</div>}
+                <div className="ac-xp">
+                  <span className="t-impact" style={{ fontSize: 22, color: isEarned ? 'var(--acid)' : 'var(--mut)' }}>+{a.xp}</span>
+                  <span className="t-hud" style={{ color: isEarned ? 'var(--acid)' : isSecret ? 'var(--mag)' : 'var(--mut)', fontSize: 9 }}>
+                    {isEarned ? 'получено' : isSecret ? 'секрет' : 'xp'}
+                  </span>
+                </div>
               </div>
             )
           })}
@@ -485,11 +437,67 @@ export default function Achievements({ navigate }) {
 
         {visible.length === 0 && (
           <div style={{ padding: '60px 0', textAlign: 'center' }}>
-            <div style={{ fontFamily: B, fontSize: 48, color: '#ddd', marginBottom: 8 }}>空</div>
-            <div style={{ fontFamily: J, fontSize: 13, color: '#bbb' }}>Пусто</div>
+            <div className="t-out" style={{ fontSize: 80, '--stroke': 'var(--mut)' }}>空</div>
+            <div style={{ fontSize: 15, color: 'var(--mut)', marginTop: 8 }}>Пусто</div>
           </div>
         )}
-      </div>
+      </section>
+
+      <style>{CSS}</style>
     </div>
   )
 }
+
+const CSS = `
+  .ac { padding-top: 52px; min-height: 100vh; overflow-x: hidden; background: var(--bg); color: var(--fg); }
+  .ac *, .ac *::before, .ac *::after { box-sizing: border-box; }
+  .ac h1 { margin: 0; }
+  .ac button:focus-visible { outline: 3px solid var(--cy); outline-offset: 3px; }
+
+  .ac-hero { position: relative; display: grid; grid-template-columns: auto 1fr; gap: 5vw; align-items: end; padding: 8vh 5vw 15vh; background: var(--bg-2); clip-path: polygon(0 0, 100% 0, 100% calc(100% - 5vw), 0 100%); overflow: hidden; }
+  .ac-lv { position: relative; display: flex; flex-direction: column; }
+  .ac-lv-n { font-size: clamp(140px, 26vw, 420px); line-height: .8; color: var(--lc); transform: rotate(-4deg); transform-origin: left bottom; margin-top: 10px; text-shadow: 10px 10px 0 var(--bg); }
+  .ac-info { position: relative; min-width: 0; padding-bottom: 1vw; }
+  .ac-title { font-size: clamp(24px, 3.9vw, 76px); overflow-wrap: normal; hyphens: none; text-wrap: balance; } /* the longest level names are 12-13 letters: size to the column, never split a word */
+  .ac-jp { font-size: clamp(18px, 2.4vw, 34px); color: var(--mut); margin: 12px 0 18px; }
+  .ac-meta { color: var(--fg); }
+  .ac-segs { display: grid; grid-template-columns: repeat(20, 1fr); gap: 3px; margin: 22px 0 10px; max-width: 640px; }
+  .ac-segs i { height: 24px; border: 1.5px solid var(--line); transform: skewX(-18deg); display: block; }
+  .ac-segs i.f { background: var(--lc); border-color: var(--lc); }
+  .ac-next { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; max-width: 640px; line-height: 1.6; }
+
+  .ac-ladder { margin-top: -3vw; padding: 0 5vw; }
+  .ac-ladder-in { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; }
+  .ac-step { height: 44px; display: grid; place-items: center; transform: skewX(-18deg); background: rgba(244,244,255,.06); color: var(--mut); font: 400 16px var(--f-impact); }
+  .ac-step span { transform: skewX(18deg); }
+  .ac-step.done { background: var(--sc); color: var(--bg); }
+  .ac-step.cur { box-shadow: 5px 5px 0 var(--fg); transform: skewX(-18deg) translateY(-6px); }
+
+  .ac-main { max-width: 1240px; margin: 0 auto; padding: 8vw 5vw 8vw; }
+  .ac-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 34px; }
+  .ac-filters button { background: none; border: 0; padding: 0; cursor: pointer; color: var(--mut); font: 700 11px var(--f-head); letter-spacing: .1em; text-transform: uppercase; }
+  .ac-filters button span { display: block; padding: 13px 20px; box-shadow: inset 0 0 0 1px var(--line); transform: skewX(-12deg); transition: background .15s, color .15s; }
+  .ac-filters button:hover { color: var(--fg); }
+  .ac-filters button.on { color: var(--bg); } .ac-filters button.on span { background: var(--acid); box-shadow: none; }
+
+  .ac-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 5vw; }
+  .ac-card { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 16px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .ac-ico { width: 64px; height: 64px; display: grid; place-items: center; background: rgba(244,244,255,.05); box-shadow: inset 0 0 0 1px var(--line); }
+  .ac-card.earned .ac-ico { background: var(--acid); box-shadow: 5px 5px 0 var(--blue); transform: rotate(-3deg); }
+  .ac-name { font-weight: 700; font-size: 16px; line-height: 1.25; margin-bottom: 4px; color: var(--mut); overflow-wrap: break-word; }
+  .ac-card.earned .ac-name { color: var(--fg); }
+  .ac-desc { font-size: 14px; line-height: 1.4; color: var(--mut); }
+  .ac-xp { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+
+  @media (max-width: 820px) {
+    .ac-hero { grid-template-columns: 1fr; gap: 24px; background: var(--bg-2); padding-bottom: 18vw; }
+    .ac-lv-n { font-size: 38vw; }
+    .ac-grid { grid-template-columns: 1fr; }
+    .ac-ladder-in { grid-template-columns: repeat(6, 1fr); row-gap: 8px; padding-right: 10px; }
+    .ac-step { height: 38px; }
+    .ac-card { grid-template-columns: 56px minmax(0, 1fr) auto; gap: 12px; }
+    .ac-ico { width: 56px; height: 56px; }
+    .ac-filters button span { padding: 12px 14px; font-size: 10px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .ac-filters button span { transition: none; } }
+`
