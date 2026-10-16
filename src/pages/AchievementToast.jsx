@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps, no-empty -- toast logic unchanged (visual restyle only) */
 import { useState, useEffect, useRef } from 'react'
 import { getEarned, ACHIEVEMENTS, getLevelInfo, AchIcon } from './Achievements'
 
@@ -55,29 +56,29 @@ export default function AchievementToast({ list }) {
 
   const dismiss = () => { clearTimeout(timerRef.current); setCurrent(null) }
 
+  const KF = `@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:none;opacity:1}} @media (prefers-reduced-motion: reduce){.at-toast{animation:none!important}}`
+  const base = {
+    position: 'fixed', bottom: 24, right: 24, zIndex: 9999,
+    cursor: 'pointer', maxWidth: 'min(340px, calc(100vw - 32px))',
+    animation: 'slideIn 0.35s cubic-bezier(0.16,1,0.3,1)',
+    display: 'flex', alignItems: 'center',
+  }
+
   if (current.type === 'levelup') {
     const lvl = current.data
     return (
-      <div onClick={dismiss} style={{
-        position: 'fixed', bottom: 24, right: 24, zIndex: 9999,
-        background: lvl.color, color: '#fff',
-        border: '3px solid #0a0a0a',
-        boxShadow: '6px 6px 0 rgba(10,10,10,0.35)',
-        padding: '16px 22px',
-        display: 'flex', alignItems: 'center', gap: 16,
-        maxWidth: 340, cursor: 'pointer',
-        animation: 'slideIn 0.35s cubic-bezier(0.16,1,0.3,1)',
+      <div className="at-toast" role="status" onClick={dismiss} style={{
+        ...base, background: lvl.color, color: 'var(--bg)',
+        boxShadow: '8px 8px 0 var(--bg-2), 8px 8px 0 1px var(--line)',
+        padding: '16px 26px 16px 20px', gap: 16,
+        clipPath: 'polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%)',
       }}>
-        <style>{`@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:none;opacity:1}}`}</style>
-        <div style={{ fontFamily: "'Bangers', sans-serif", fontSize: 52, lineHeight: 1, flexShrink: 0, textShadow: '2px 2px 0 rgba(0,0,0,0.2)' }}>{lvl.level}</div>
+        <style>{KF}</style>
+        <div className="t-impact" style={{ fontSize: 60, lineHeight: 1, flexShrink: 0 }}>{lvl.level}</div>
         <div>
-          <div style={{ fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', opacity: 0.8, marginBottom: 3 }}>
-            НОВЫЙ УРОВЕНЬ
-          </div>
-          <div style={{ fontFamily: "'Noto Sans'", fontWeight: 900, fontStyle: 'italic', fontSize: 18, lineHeight: 1.1, marginBottom: 2 }}>
-            {lvl.title}
-          </div>
-          <div style={{ fontFamily: "'Noto Sans JP'", fontSize: 12, opacity: 0.75 }}>{lvl.jp}</div>
+          <div className="t-hud" style={{ marginBottom: 4 }}>Новый уровень</div>
+          <div className="t-head" style={{ fontSize: 18, lineHeight: 1, marginBottom: 4 }}>{lvl.title}</div>
+          <div className="t-jp" style={{ fontSize: 13 }}>{lvl.jp}</div>
         </div>
       </div>
     )
@@ -85,28 +86,18 @@ export default function AchievementToast({ list }) {
 
   const ach = current.data
   return (
-    <div onClick={dismiss} style={{
-      position: 'fixed', bottom: 24, right: 24, zIndex: 9999,
-      background: '#0a0a0a', color: '#f0ede6',
-      border: '3px solid #0a0a0a',
-      boxShadow: '6px 6px 0 rgba(10,10,10,0.3)',
-      padding: '14px 18px',
-      display: 'flex', alignItems: 'center', gap: 14,
-      maxWidth: 320, cursor: 'pointer',
-      animation: 'slideIn 0.35s cubic-bezier(0.16,1,0.3,1)',
+    <div className="at-toast" role="status" onClick={dismiss} style={{
+      ...base, background: 'var(--bg-2)', color: 'var(--fg)',
+      border: '1px solid var(--line)', borderLeft: '6px solid var(--acid)',
+      boxShadow: '8px 8px 0 var(--acid)',
+      padding: '14px 18px', gap: 14,
     }}>
-      <style>{`@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:none;opacity:1}}`}</style>
-      <div style={{ flexShrink: 0 }}><AchIcon id={ach.icon} size={40} color="#f0ede6" /></div>
-      <div>
-        <div style={{ fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: '#d62828', marginBottom: 3 }}>
-          НОВАЯ АЧИВКА · +{ach.xp} XP
-        </div>
-        <div style={{ fontFamily: "'Noto Sans'", fontWeight: 900, fontStyle: 'italic', fontSize: 15, lineHeight: 1.2, marginBottom: 2 }}>
-          {ach.name}
-        </div>
-        <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: '#aaa', fontWeight: 600 }}>
-          {ach.desc}
-        </div>
+      <style>{KF}</style>
+      <div style={{ flexShrink: 0, background: 'var(--acid)', padding: 6 }}><AchIcon id={ach.icon || ach.id} size={36} color="#07070e" /></div>
+      <div style={{ minWidth: 0 }}>
+        <div className="t-hud" style={{ color: 'var(--acid)', marginBottom: 5 }}>Новая ачивка · +{ach.xp} XP</div>
+        <div className="t-head" style={{ fontSize: 15, lineHeight: 1.05, marginBottom: 4 }}>{ach.name}</div>
+        <div style={{ fontSize: 14, color: 'var(--mut)', lineHeight: 1.35 }}>{ach.desc}</div>
       </div>
     </div>
   )

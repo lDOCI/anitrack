@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis,
   BarChart, Bar, XAxis, ResponsiveContainer, Cell, Tooltip,
@@ -9,60 +9,37 @@ import NavBar from '../components/NavBar'
 
 const STORAGE_KEY = 'anitrack_list'
 
-function AnimBar({ value, max, delay, color = '#0a0a0a' }) {
+function AnimBar({ value, max, delay, color = 'var(--fg)' }) {
   const [w, setW] = useState(0)
   useEffect(() => {
     const t = setTimeout(() => setW((value / max) * 100), delay)
     return () => clearTimeout(t)
   }, [value, max, delay])
   return (
-    <div style={{ height: 6, background: 'rgba(10,10,10,0.1)', position: 'relative' }}>
-      <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', background: color, width: `${w}%`, transition: 'width 1.2s cubic-bezier(0.16,1,0.3,1)' }} />
+    <div className="pf-bar">
+      <i style={{ background: color, width: `${w}%` }} />
     </div>
   )
 }
 
-function Hatch({ angle = 45, gap = 7, opacity = 0.05, color = '#0a0a0a' }) {
-  const id = `h${angle}${gap}${Math.random().toString(36).slice(2, 6)}`
-  return (
-    <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
-      <defs>
-        <pattern id={id} width={gap} height={gap} patternUnits="userSpaceOnUse" patternTransform={`rotate(${angle})`}>
-          <line x1="0" y1="0" x2="0" y2={gap} stroke={color} strokeWidth="0.8" opacity={opacity * 12} />
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill={`url(#${id})`} />
-    </svg>
-  )
-}
-
-function SpeedLines({ opacity = 0.04, color = '#0a0a0a' }) {
-  return (
-    <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
-      {Array.from({ length: 40 }).map((_, i) => {
-        const a = (i / 40) * 360 * Math.PI / 180
-        return <line key={i} x1="200" y1="200" x2={200 + Math.cos(a) * 600} y2={200 + Math.sin(a) * 600}
-          stroke={color} strokeWidth={i % 5 === 0 ? 1.2 : 0.4} opacity={opacity} />
-      })}
-    </svg>
-  )
-}
+const TIP = { background: '#101022', border: '1px solid rgba(244,244,255,.3)', borderRadius: 0, fontFamily: 'Onest, sans-serif', fontSize: 14, color: '#f4f4ff' }
+const AXIS = { fill: '#a9a9cc', fontSize: 12, fontFamily: 'Unbounded, sans-serif', fontWeight: 700 }
 
 export default function Profile({ sharedList, navigate }) {
   const isOwn = !sharedList
-  const [list, setList] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [list, setList] = useState(() => {
+    if (!isOwn) return null
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [] } catch { return [] }
+  })
+  const [loading, setLoading] = useState(!isOwn)
   const [loadPct, setLoadPct] = useState(0)
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    if (isOwn) {
-      try { setList(JSON.parse(localStorage.getItem(STORAGE_KEY)) || []) } catch { setList([]) }
-    } else {
-      setLoading(true)
-      hydrateList(sharedList, pct => setLoadPct(Math.round(pct * 100)))
-        .then(h => { setList(h); setLoading(false) })
-    }
+    if (isOwn) return
+    hydrateList(sharedList, pct => setLoadPct(Math.round(pct * 100)))
+      .then(h => { setList(h); setLoading(false) })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleShare = () => {
@@ -74,16 +51,23 @@ export default function Profile({ sharedList, navigate }) {
     })
   }
 
+
+  const shareBtn = isOwn ? (
+    <button className="btn sm" onClick={handleShare} style={copied ? { background: 'var(--cy)' } : undefined}>
+      {copied ? 'Скопировано' : 'Поделиться'}
+    </button>
+  ) : null
+
   if (loading || !list) {
     return (
-      <div style={{ background: '#f0ede6', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Space Grotesk',sans-serif" }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: "'Bangers', sans-serif", fontSize: 48, color: '#ccc', marginBottom: 12 }}>読み込み中...</div>
-          <div style={{ fontSize: 14, color: '#aaa', marginBottom: 16 }}>Загрузка профиля... {loadPct}%</div>
-          <div style={{ width: 200, height: 6, background: 'rgba(10,10,10,0.1)', margin: '0 auto' }}>
-            <div style={{ height: '100%', background: '#d62828', width: `${loadPct}%`, transition: 'width 0.3s' }} />
-          </div>
+      <div className="pf">
+        <NavBar active="profile" onNavigate={navigate} />
+        <div className="pf-load">
+          <div className="t-hud" style={{ color: 'var(--acid)', marginBottom: 14 }}>// загрузка профиля</div>
+          <div className="t-out pf-load-n">{loadPct}%</div>
+          <div className="pf-bar" style={{ width: 260, margin: '18px auto 0' }}><i style={{ background: 'var(--acid)', width: `${loadPct}%` }} /></div>
         </div>
+        <style>{CSS}</style>
       </div>
     )
   }
@@ -97,257 +81,239 @@ export default function Profile({ sharedList, navigate }) {
   const radarData = radarGenres.map(([g, v]) => ({ genre: g, value: Math.round((v / maxG) * 100) }))
 
   return (
-    <div style={{ background: '#f0ede6', minHeight: '100vh', fontFamily: "'Space Grotesk',sans-serif" }}>
-      <style>{`
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        ::selection { background: #d62828; color: #fff; }
-        body { background: #f0ede6 !important; }
-        .ht::before {
-          content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9998;
-          opacity: 0.03;
-          background-image: radial-gradient(circle, #000 1px, transparent 1px);
-          background-size: 5px 5px;
-        }
-        @keyframes fadeUp { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:none } }
-        .fade-up { animation: fadeUp 0.6s ease forwards; }
-        @media (max-width: 768px) {
-          .hero-grid { grid-template-columns: 1fr !important; }
-          .mid-grid { grid-template-columns: 1fr !important; }
-          .bottom-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
+    <div className="pf">
+      <NavBar active="profile" onNavigate={navigate} rightContent={shareBtn} />
 
-      <div className="ht" />
+      {list.length === 0 ? (
+        <div className="pf-empty">
+          <div className="t-out pf-empty-h">Пусто</div>
+          <div style={{ fontSize: 17, color: 'var(--mut)', margin: '10px 0 30px' }}>Список пуст. Добавь первое аниме, и тут появится статистика.</div>
+          <button className="btn" onClick={() => navigate('tracker')}>Перейти в список</button>
+        </div>
+      ) : (<>
 
-      <NavBar active="profile" onNavigate={navigate} rightContent={isOwn ? (
-        <button onClick={handleShare} style={{
-          fontFamily: "'Bangers', sans-serif", fontSize: 14, letterSpacing: '0.08em',
-          padding: '4px 16px', background: copied ? '#166534' : '#d62828', color: '#f0ede6',
-          border: 'none', cursor: 'pointer', transition: 'all 0.15s',
-        }}>
-          {copied ? 'СКОПИРОВАНО!' : 'ПОДЕЛИТЬСЯ →'}
-        </button>
-      ) : null} />
-
-      <div style={{ paddingTop: 52, maxWidth: 1000, margin: '0 auto' }}>
-        {list.length === 0 ? (
-          <div style={{ padding: '100px 24px', textAlign: 'center' }}>
-            <div style={{ fontFamily: "'Bangers', sans-serif", fontSize: 72, color: '#ccc', marginBottom: 16 }}>データなし</div>
-            <div style={{ fontSize: 16, color: '#aaa', marginBottom: 32 }}>Список пуст</div>
-            <button onClick={() => navigate('tracker')} style={{
-                fontFamily: "'Bangers', sans-serif", fontSize: 22, letterSpacing: '0.08em',
-                padding: '12px 36px', background: '#0a0a0a', color: '#f0ede6',
-                border: '3px solid #0a0a0a', cursor: 'pointer',
-              }}>ПЕРЕЙТИ В СПИСОК</button>
+        {/* ═════ HERO ═════ */}
+        <section className="pf-hero">
+          <div className="scan" />
+          <div className="pf-hero-in">
+            <div className="t-hud" style={{ color: 'var(--acid)' }}>// {isOwn ? 'мой профиль / プロフィール' : 'профиль друга / 共有'}</div>
+            <h1 className="t-head pf-h1">
+              {isOwn ? <>Моя<br /><span className="t-impact mark">статистика</span></> : <>Профиль<br /><span className="t-impact mark">друга</span></>}
+            </h1>
+            <div className="pf-hero-meta t-hud">
+              <span>{stats.scored} с оценкой</span><span>{stats.topGenres.length} жанров</span><span>{stats.topStudios.length} студий</span>
+            </div>
           </div>
-        ) : (<>
+          <div className="pf-hero-num" aria-label={`${stats.total} аниме`}>
+            <span className="t-out pf-big">{stats.total}</span>
+            <span className="t-hud pf-big-l">аниме в списке · アニメ</span>
+          </div>
+        </section>
 
-          {/* HEADER */}
-          <section style={{ borderBottom: '3px solid #0a0a0a' }}>
-            <div style={{
-              padding: '20px 32px', borderBottom: '3px solid #0a0a0a',
-              background: '#0a0a0a', position: 'relative', overflow: 'hidden',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            }}>
-              <SpeedLines opacity={0.06} color="#fff" />
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ fontFamily: "'Noto Sans JP'", fontSize: 10, color: '#555', letterSpacing: '0.12em', marginBottom: 4 }}>
-                  {isOwn ? 'МОЙ ПРОФИЛЬ / プロフィール' : 'ПРОФИЛЬ / 共有'}
-                </div>
-                <div style={{ fontFamily: "'Bangers', sans-serif", fontSize: 36, letterSpacing: '0.04em', color: '#f0ede6', lineHeight: 1 }}>
-                  {isOwn ? 'МОЯ СТАТИСТИКА' : 'ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ'}
-                </div>
+        {/* ═════ BIG NUMBERS ═════ */}
+        <section className="pf-nums">
+          <div className="pf-nums-in">
+            {[
+              { num: stats.totalEp.toLocaleString('ru'), label: 'серий', jp: 'エピソード' },
+              { num: stats.totalHours.toLocaleString('ru'), label: 'часов жизни', jp: '時間' },
+              { num: stats.avgScore, label: 'средняя оценка', jp: '平均点', hot: true },
+            ].map(s => (
+              <div key={s.label} className={`pf-num${s.hot ? ' hot' : ''}`}>
+                <div className="t-hud pf-num-l">{s.jp} · {s.label}</div>
+                <div className="t-impact pf-num-v">{s.num}</div>
               </div>
-              <div style={{ fontFamily: "'Noto Sans JP'", fontSize: 11, color: '#444', position: 'relative', zIndex: 1, textAlign: 'right' }}>
-                <div>{stats.total} аниме</div>
-                <div style={{ color: '#666', marginTop: 2 }}>{stats.scored} с оценкой</div>
-              </div>
-            </div>
+            ))}
+          </div>
+        </section>
 
-            {/* Big numbers */}
-            <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
-              {[
-                { num: stats.total, label: 'Аниме', jp: 'アニメ' },
-                { num: stats.totalEp.toLocaleString('ru'), label: 'Серий', jp: 'エピソード' },
-                { num: stats.totalHours.toLocaleString('ru'), label: 'Часов', jp: '時間' },
-                { num: stats.avgScore, label: 'Средняя', jp: '平均点', accent: true },
-              ].map((s, i) => (
-                <div key={i} style={{
-                  padding: '32px 28px',
-                  borderRight: i < 3 ? '3px solid #0a0a0a' : 'none',
-                  background: s.accent ? '#d62828' : 'transparent',
-                  position: 'relative', overflow: 'hidden',
-                }}>
-                  {i === 0 && <Hatch angle={45} gap={7} opacity={0.04} />}
-                  <div style={{
-                    fontFamily: "'Noto Sans JP'", fontSize: 10, fontWeight: 700,
-                    letterSpacing: '0.12em', textTransform: 'uppercase',
-                    color: s.accent ? 'rgba(255,255,255,0.6)' : '#aaa',
-                    marginBottom: 6, position: 'relative', zIndex: 1,
-                  }}>
-                    <span style={{ fontFamily: "'Noto Sans JP'" }}>{s.jp}</span> · {s.label}
-                  </div>
-                  <div className="fade-up" style={{
-                    fontFamily: "'Bangers', sans-serif", fontSize: 'clamp(40px,5vw,64px)',
-                    letterSpacing: '0.02em', lineHeight: 0.95,
-                    color: s.accent ? '#fff' : '#0a0a0a',
-                    position: 'relative', zIndex: 1,
-                  }}>{s.num}</div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* GENRES + SCORES */}
-          <section className="mid-grid" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', borderBottom: '3px solid #0a0a0a' }}>
-            <div style={{ borderRight: '3px solid #0a0a0a', padding: 32, position: 'relative' }}>
-              <Hatch angle={-30} gap={9} opacity={0.03} />
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ fontFamily: "'Noto Sans JP'", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color: '#aaa', marginBottom: 6 }}>ジャンル</div>
-                <div style={{ fontFamily: "'Bangers', sans-serif", fontSize: 32, letterSpacing: '0.04em', color: '#0a0a0a', lineHeight: 1, marginBottom: 28 }}>ТОП ЖАНРЫ</div>
+        {/* ═════ GENRES + SCORES ═════ */}
+        <section className="pf-sec">
+          <div className="pf-two">
+            <div>
+              <div className="t-hud pf-eye">// ジャンル</div>
+              <h2 className="t-head pf-h2">Топ <span className="t-out">жанры</span></h2>
+              <div className="pf-rows">
                 {stats.topGenres.map(([g, v], i) => (
-                  <div key={g} style={{ marginBottom: 16 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ fontFamily: "'Bangers', sans-serif", fontSize: 13, color: '#bbb', letterSpacing: '0.04em', minWidth: 20 }}>{String(i + 1).padStart(2, '0')}</span>
-                        <span style={{ fontSize: 14, fontWeight: 700, color: '#0a0a0a' }}>{g}</span>
-                      </div>
-                      <span style={{ fontFamily: "'Bangers', sans-serif", fontSize: 18, color: i === 0 ? '#d62828' : '#0a0a0a' }}>{v}</span>
-                    </div>
-                    <AnimBar value={v} max={maxGenre} delay={i * 80} color={i === 0 ? '#d62828' : '#0a0a0a'} />
+                  <div key={g} className="pf-row">
+                    <span className="t-hud pf-row-n" style={{ color: i === 0 ? 'var(--acid)' : 'var(--mut)' }}>{String(i + 1).padStart(2, '0')}</span>
+                    <span className="pf-row-t">{g}</span>
+                    <span className="t-impact pf-row-v" style={{ color: i === 0 ? 'var(--acid)' : 'var(--fg)' }}>{v}</span>
+                    <div className="pf-row-b"><AnimBar value={v} max={maxGenre} delay={i * 80} color={i === 0 ? 'var(--acid)' : 'var(--cy)'} /></div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div style={{ padding: 32 }}>
-              <div style={{ fontFamily: "'Noto Sans JP'", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color: '#aaa', marginBottom: 6 }}>評価分布</div>
-              <div style={{ fontFamily: "'Bangers', sans-serif", fontSize: 32, letterSpacing: '0.04em', color: '#0a0a0a', lineHeight: 1, marginBottom: 28 }}>ОЦЕНКИ</div>
-              <ResponsiveContainer width="100%" height={160}>
-                <BarChart data={stats.scoreDist} barCategoryGap="18%">
-                  <XAxis dataKey="s" axisLine={false} tickLine={false}
-                    tick={{ fill: '#999', fontSize: 12, fontFamily: 'Space Grotesk', fontWeight: 700 }} />
-                  <Tooltip
-                    cursor={{ fill: 'rgba(10,10,10,0.04)' }}
-                    contentStyle={{ background: '#f0ede6', border: '2px solid #0a0a0a', borderRadius: 0, fontFamily: 'Space Grotesk', fontSize: 12 }}
-                    formatter={(v) => [`${v} аниме`, '']}
-                    labelFormatter={(l) => `Оценка ${l}`}
-                  />
-                  <Bar dataKey="v" radius={[2, 2, 0, 0]}>
-                    {stats.scoreDist.map((s, i) => (
-                      <Cell key={i} fill={s.v === 0 ? 'rgba(10,10,10,0.08)' : Number(s.s) >= 9 ? '#0a0a0a' : Number(s.s) >= 7 ? '#555' : '#aaa'} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'rgba(10,10,10,0.1)', marginTop: 16, border: '2px solid rgba(10,10,10,0.1)' }}>
+            <div>
+              <div className="t-hud pf-eye" style={{ color: 'var(--mag)' }}>// 評価分布</div>
+              <h2 className="t-head pf-h2">Оценки</h2>
+              <div className="pf-chart">
+                <ResponsiveContainer width="100%" height={190}>
+                  <BarChart data={stats.scoreDist} barCategoryGap="14%">
+                    <XAxis dataKey="s" axisLine={{ stroke: 'rgba(244,244,255,.16)' }} tickLine={false} tick={AXIS} />
+                    <Tooltip
+                      cursor={{ fill: 'rgba(244,244,255,0.06)' }}
+                      contentStyle={TIP} itemStyle={{ color: '#f4f4ff' }}
+                      formatter={(v) => [`${v} аниме`, '']}
+                      labelFormatter={(l) => `Оценка ${l}`}
+                    />
+                    <Bar dataKey="v" radius={0}>
+                      {stats.scoreDist.map((s, i) => (
+                        <Cell key={i} fill={s.v === 0 ? 'rgba(244,244,255,0.1)' : Number(s.s) >= 9 ? '#d6ff1f' : Number(s.s) >= 7 ? '#27e1ff' : Number(s.s) >= 6 ? '#2a3cff' : '#ff2d87'} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="pf-mini">
                 {[
                   ['Средняя', stats.avgScore],
                   ['Оценено', `${stats.scored}/${stats.total}`],
                   ['Любимых (10)', stats.favorites],
                   ['Мусор (≤5)', stats.trash],
                 ].map(([l, v]) => (
-                  <div key={l} style={{ padding: '12px 14px', background: '#f0ede6' }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: '#aaa', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 3 }}>{l}</div>
-                    <div style={{ fontFamily: "'Bangers', sans-serif", fontSize: 22, color: '#0a0a0a' }}>{v}</div>
+                  <div key={l}>
+                    <div className="t-hud" style={{ color: 'var(--mut)', marginBottom: 6 }}>{l}</div>
+                    <div className="t-impact" style={{ fontSize: 30 }}>{v}</div>
                   </div>
                 ))}
               </div>
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* STUDIOS + EPOCHS + RADAR */}
-          <section className="bottom-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', borderBottom: '3px solid #0a0a0a' }}>
-            <div style={{ borderRight: '3px solid #0a0a0a', padding: 28 }}>
-              <div style={{ fontFamily: "'Noto Sans JP'", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color: '#aaa', marginBottom: 6 }}>スタジオ</div>
-              <div style={{ fontFamily: "'Bangers', sans-serif", fontSize: 28, letterSpacing: '0.04em', color: '#0a0a0a', marginBottom: 24, lineHeight: 1 }}>ТОП СТУДИИ</div>
-              {stats.topStudios.map(([s, v], i) => (
-                <div key={s} style={{ marginBottom: 14 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: '#0a0a0a' }}>{s}</span>
-                    <span style={{ fontFamily: "'Bangers', sans-serif", fontSize: 16, color: '#666' }}>{v}</span>
+        {/* ═════ STUDIOS / EPOCHS / RADAR ═════ */}
+        <section className="pf-slab">
+          <div className="pf-three">
+            <div>
+              <div className="t-hud pf-eye">// スタジオ</div>
+              <h2 className="t-head pf-h3">Топ студии</h2>
+              <div className="pf-rows">
+                {stats.topStudios.map(([s, v], i) => (
+                  <div key={s} className="pf-row">
+                    <span className="pf-row-t" style={{ gridColumn: '1 / 3' }}>{s}</span>
+                    <span className="t-impact pf-row-v" style={{ fontSize: 20 }}>{v}</span>
+                    <div className="pf-row-b"><AnimBar value={v} max={maxStudio} delay={i * 80} color={i === 0 ? 'var(--mag)' : 'var(--mut)'} /></div>
                   </div>
-                  <AnimBar value={v} max={maxStudio} delay={i * 80} color={i === 0 ? '#0a0a0a' : '#555'} />
-                </div>
-              ))}
-            </div>
-
-            <div style={{ borderRight: '3px solid #0a0a0a', padding: 28, position: 'relative' }}>
-              <Hatch angle={60} gap={8} opacity={0.03} />
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ fontFamily: "'Noto Sans JP'", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color: '#aaa', marginBottom: 6 }}>時代</div>
-                <div style={{ fontFamily: "'Bangers', sans-serif", fontSize: 28, letterSpacing: '0.04em', color: '#0a0a0a', marginBottom: 24, lineHeight: 1 }}>ЭПОХИ</div>
-                {stats.epochs.length > 0 ? (
-                  <>
-                    <ResponsiveContainer width="100%" height={140}>
-                      <BarChart data={stats.epochs} barCategoryGap="20%">
-                        <XAxis dataKey="y" axisLine={false} tickLine={false}
-                          tick={{ fill: '#999', fontSize: 11, fontFamily: 'Space Grotesk', fontWeight: 700 }} />
-                        <Tooltip
-                          cursor={{ fill: 'rgba(10,10,10,0.04)' }}
-                          contentStyle={{ background: '#f0ede6', border: '2px solid #0a0a0a', borderRadius: 0, fontFamily: 'Space Grotesk', fontSize: 12 }}
-                          formatter={(v) => [`${v} аниме`, '']}
-                        />
-                        <Bar dataKey="v" radius={[2, 2, 0, 0]}>
-                          {stats.epochs.map((e, i) => (
-                            <Cell key={i} fill={e.v === maxEpoch ? '#d62828' : '#0a0a0a'} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                    <div style={{ marginTop: 16, padding: '10px 14px', background: '#0a0a0a' }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: '#555', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 2 }}>Любимая эпоха</div>
-                      <div style={{ fontFamily: "'Bangers', sans-serif", fontSize: 24, color: '#f0ede6' }}>
-                        {stats.epochs.reduce((a, b) => a.v > b.v ? a : b).y}
-                      </div>
-                    </div>
-                  </>
-                ) : <div style={{ fontSize: 12, color: '#bbb' }}>Нет данных</div>}
+                ))}
+                {stats.topStudios.length === 0 && <div style={{ color: 'var(--mut)', fontSize: 14 }}>Нет данных</div>}
               </div>
             </div>
 
-            <div style={{ padding: 28, background: '#0a0a0a', position: 'relative', overflow: 'hidden' }}>
-              <SpeedLines opacity={0.05} color="#fff" />
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ fontFamily: "'Noto Sans JP'", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color: '#444', marginBottom: 6 }}>好み</div>
-                <div style={{ fontFamily: "'Bangers', sans-serif", fontSize: 28, letterSpacing: '0.04em', color: '#f0ede6', marginBottom: 20, lineHeight: 1 }}>ПРОФИЛЬ ВКУСОВ</div>
-                {radarData.length >= 3 ? (
-                  <ResponsiveContainer width="100%" height={200}>
-                    <RadarChart data={radarData} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
-                      <PolarGrid stroke="rgba(255,255,255,0.15)" />
-                      <PolarAngleAxis dataKey="genre"
-                        tick={{ fill: '#888', fontSize: 10, fontFamily: 'Space Grotesk', fontWeight: 700 }} />
-                      <Radar dataKey="value" stroke="#f0ede6" fill="#f0ede6" fillOpacity={0.15} strokeWidth={2} />
-                    </RadarChart>
+            <div>
+              <div className="t-hud pf-eye" style={{ color: 'var(--cy)' }}>// 時代</div>
+              <h2 className="t-head pf-h3">Эпохи</h2>
+              {stats.epochs.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height={150}>
+                    <BarChart data={stats.epochs} barCategoryGap="16%">
+                      <XAxis dataKey="y" axisLine={{ stroke: 'rgba(244,244,255,.16)' }} tickLine={false} tick={{ ...AXIS, fontSize: 11 }} />
+                      <Tooltip cursor={{ fill: 'rgba(244,244,255,0.06)' }} contentStyle={TIP} itemStyle={{ color: '#f4f4ff' }} formatter={(v) => [`${v} аниме`, '']} />
+                      <Bar dataKey="v" radius={0}>
+                        {stats.epochs.map((e, i) => <Cell key={i} fill={e.v === maxEpoch ? '#d6ff1f' : '#27e1ff'} />)}
+                      </Bar>
+                    </BarChart>
                   </ResponsiveContainer>
-                ) : (
-                  <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#555' }}>
-                    Нужно минимум 3 жанра
+                  <div className="pf-fav">
+                    <div className="t-hud" style={{ color: 'var(--bg)', opacity: .75, marginBottom: 4 }}>Любимая эпоха</div>
+                    <div className="t-impact" style={{ fontSize: 30, color: 'var(--bg)' }}>{stats.epochs.reduce((a, b) => a.v > b.v ? a : b).y}</div>
                   </div>
-                )}
-              </div>
+                </>
+              ) : <div style={{ color: 'var(--mut)', fontSize: 14 }}>Нет данных</div>}
             </div>
-          </section>
 
-          {/* SHARE FOOTER */}
-          {isOwn && (
-            <section style={{ padding: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-              <div>
-                <div style={{ fontFamily: "'Bangers', sans-serif", fontSize: 13, letterSpacing: '0.1em', color: '#bbb', marginBottom: 4 }}>ПОДЕЛИТЬСЯ ПРОФИЛЕМ</div>
-                <div style={{ fontSize: 13, color: '#aaa' }}>Ссылка содержит весь твой список — без регистрации</div>
-              </div>
-              <button onClick={handleShare} style={{
-                fontFamily: "'Bangers', sans-serif", fontSize: 18, letterSpacing: '0.08em',
-                padding: '10px 24px', background: copied ? '#166534' : '#d62828', color: '#f0ede6',
-                border: 'none', cursor: 'pointer', transition: 'all 0.15s',
-              }}>
-                {copied ? 'СКОПИРОВАНО!' : 'ПОДЕЛИТЬСЯ →'}
-              </button>
-            </section>
-          )}
-        </>)}
-      </div>
+            <div>
+              <div className="t-hud pf-eye" style={{ color: 'var(--mag)' }}>// 好み</div>
+              <h2 className="t-head pf-h3">Профиль вкусов</h2>
+              {radarData.length >= 3 ? (
+                <ResponsiveContainer width="100%" height={230}>
+                  <RadarChart data={radarData} margin={{ top: 10, right: 30, bottom: 10, left: 30 }}>
+                    <PolarGrid stroke="rgba(244,244,255,0.2)" />
+                    <PolarAngleAxis dataKey="genre" tick={{ fill: '#c9c9e6', fontSize: 11, fontFamily: 'Onest, sans-serif', fontWeight: 600 }} />
+                    <Radar dataKey="value" stroke="#d6ff1f" fill="#d6ff1f" fillOpacity={0.25} strokeWidth={2} />
+                  </RadarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={{ height: 200, display: 'flex', alignItems: 'center', fontSize: 14, color: 'var(--mut)' }}>Нужно минимум 3 жанра</div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* ═════ SHARE ═════ */}
+        {isOwn && (
+          <section className="pf-share">
+            <div>
+              <div className="t-hud" style={{ color: 'var(--acid)', marginBottom: 10 }}>// поделиться профилем</div>
+              <div style={{ fontSize: 16, color: '#c9c9e6', maxWidth: 420, lineHeight: 1.5 }}>Ссылка содержит весь твой список. Без регистрации.</div>
+            </div>
+            <button className="btn" onClick={handleShare} style={copied ? { background: 'var(--cy)' } : undefined}>
+              {copied ? 'Скопировано' : 'Поделиться →'}
+            </button>
+          </section>
+        )}
+      </>)}
+
+      <style>{CSS}</style>
     </div>
   )
 }
+
+const CSS = `
+  .pf { padding-top: 52px; min-height: 100vh; overflow-x: hidden; color: var(--fg); background: var(--bg); }
+  .pf *, .pf *::before, .pf *::after { box-sizing: border-box; }
+  .pf h1, .pf h2, .pf p { margin: 0; }
+  .pf button:focus-visible { outline: 3px solid var(--cy); outline-offset: 3px; }
+  .pf-bar { height: 12px; position: relative; overflow: hidden; background: rgba(244,244,255,.08); transform: skewX(-18deg); }
+  .pf-bar > i { position: absolute; inset: 0 auto 0 0; display: block; transition: width 1.1s cubic-bezier(.16,1,.3,1); }
+  .pf-load, .pf-empty { min-height: calc(100vh - 52px); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+  .pf-load-n, .pf-empty-h { font-size: clamp(64px, 16vw, 200px); --stroke: var(--acid); }
+
+  .pf-hero { position: relative; display: grid; grid-template-columns: minmax(0,1.6fr) minmax(0,1fr); align-items: end; gap: 4vw; padding: 7vh 5vw 14vh; background: linear-gradient(115deg, var(--bg-2) 0 55%, var(--bg) 55%); overflow: hidden; }
+  .pf-hero-in { position: relative; z-index: 2; max-width: 1240px; min-width: 0; }
+  .pf-h1 { font-size: clamp(36px, 5.1vw, 104px); margin-top: 18px; } /* sized to its column: 'СТАТИСТИКА' must not run into the number */
+  .pf-h1 .mark { font-size: .82em; margin-top: .1em; }
+  .pf-hero-meta { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 28px; color: var(--mut); }
+  .pf-hero-num { min-width: 0; position: relative; z-index: 2; display: flex; flex-direction: column; align-items: flex-end; }
+  .pf-big { font-size: clamp(80px, 10vw, 210px); line-height: .8; padding-right: 2vw; --stroke: var(--acid); transform: rotate(-4deg); display: block; }
+  .pf-big-l { color: var(--acid); margin-top: 18px; }
+
+  .pf-nums { position: relative; background: var(--acid); color: var(--bg); clip-path: polygon(0 5vw, 100% 0, 100% calc(100% - 5vw), 0 100%); margin-top: -6vw; padding: 11vw 0 10vw; }
+  .pf-nums-in { max-width: 1240px; margin: 0 auto; padding: 0 5vw; display: grid; grid-template-columns: repeat(3, 1fr); gap: 3vw; }
+  .pf-num { padding: 0 0 0 18px; border-left: 3px solid var(--bg); min-width: 0; }
+  .pf-num-l { color: rgba(7,7,14,.8); margin-bottom: 10px; font-size: 11px; }
+  .pf-num-v { font-size: clamp(34px, 6vw, 104px); color: var(--bg); white-space: nowrap; }
+  .pf-num.hot { background: var(--bg); padding: 16px 18px 18px; border-left: 0; transform: rotate(2deg); box-shadow: 10px 10px 0 var(--mag); }
+  .pf-num.hot .pf-num-l { color: var(--mut); }
+  .pf-num.hot .pf-num-v { color: var(--acid); }
+
+  .pf-sec { max-width: 1240px; margin: 0 auto; padding: 9vw 5vw 7vw; }
+  .pf-two { display: grid; grid-template-columns: 1.15fr 1fr; gap: 6vw; align-items: start; }
+  .pf-eye { color: var(--acid); margin-bottom: 14px; }
+  .pf-h2 { font-size: clamp(32px, 4.6vw, 68px); margin-bottom: 36px !important; }
+  .pf-h3 { font-size: clamp(24px, 2.8vw, 40px); margin-bottom: 26px !important; }
+  .pf-rows { display: flex; flex-direction: column; gap: 18px; }
+  .pf-row { display: grid; grid-template-columns: 28px 1fr auto; align-items: baseline; gap: 4px 12px; }
+  .pf-row-t { font-size: 16px; font-weight: 600; min-width: 0; overflow-wrap: break-word; }
+  .pf-row-v { font-size: 24px; }
+  .pf-row-b { grid-column: 1 / -1; padding-left: 6px; }
+  .pf-chart { margin: 0 -6px; }
+  .pf-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 18px; margin-top: 22px; padding-top: 22px; border-top: 1px solid var(--line); }
+
+  .pf-slab { background: var(--bg-2); clip-path: polygon(0 4vw, 100% 0, 100% 100%, 0 100%); padding: 10vw 5vw 7vw; }
+  .pf-three { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4vw; }
+  .pf-three > div { min-width: 0; }
+  .pf-fav { margin-top: 14px; padding: 12px 16px; background: var(--acid); display: inline-block; transform: rotate(-2deg); }
+
+  .pf-share { max-width: 1240px; margin: 0 auto; padding: 7vw 5vw 9vw; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 28px; }
+
+  @media (max-width: 820px) {
+    .pf-hero { grid-template-columns: 1fr; padding-bottom: 12vh; background: var(--bg-2); }
+    .pf-hero-num { align-items: flex-start; }
+    .pf-nums-in { grid-template-columns: 1fr 1fr; gap: 28px 5vw; }
+    .pf-num.hot { grid-column: 1 / -1; margin: 6px 8px 0 0; }
+    .pf-two, .pf-three { grid-template-columns: 1fr; gap: 56px; }
+    .pf-nums { padding: 16vw 0 14vw; }
+  }
+  @media (prefers-reduced-motion: reduce) { .pf-bar > i { transition: none; } }
+`

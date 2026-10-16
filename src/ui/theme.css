@@ -1,0 +1,82 @@
+/* ───────── AniTrack · night + impact ─────────
+   Dark base, acid accent, duotone key art, diagonal cuts, tilted tape, brush SFX. */
+
+:root {
+  --bg: #07070e;
+  --bg-2: #101022;
+  --fg: #f4f4ff;
+  --mut: #8d8db3;
+  --line: rgba(244, 244, 255, .16);
+  --acid: #d6ff1f;
+  --blue: #2a3cff;
+  --mag: #ff2d87;
+  --cy: #27e1ff;
+
+  --f-head: 'Unbounded', 'Dela Gothic One', 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
+  --f-impact: 'Dela Gothic One', 'Unbounded', 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
+  --f-body: 'Onest', system-ui, sans-serif;
+  --f-jp: 'Noto Sans JP', sans-serif;
+}
+
+html { background: var(--bg); scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
+::selection { background: var(--acid); color: var(--bg); }
+a { color: inherit; text-decoration: none; }
+
+/* ── type ── */
+.t-head   { font-family: var(--f-head); font-weight: 900; text-transform: uppercase; letter-spacing: -.045em; line-height: .86; }
+.t-impact { font-family: var(--f-impact); font-weight: 400; text-transform: uppercase; letter-spacing: -.02em; line-height: .86; }
+.t-hud    { font-family: var(--f-head); font-weight: 700; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; }
+.t-jp     { font-family: var(--f-jp); font-weight: 900; }
+.t-out    { font-family: var(--f-impact); font-weight: 400; letter-spacing: -.02em; color: transparent; -webkit-text-stroke: 2px var(--stroke, var(--fg)); } /* static font: no overlapping contours inside strokes */
+.t-vert   { writing-mode: vertical-rl; letter-spacing: .1em; }
+.mark     { display: inline-block; background: var(--acid); color: var(--bg); padding: 0 .08em; transform: rotate(-2deg); }
+
+/* glitch title: RGB-split ghost layers + occasional jitter */
+.glitch { position: relative; display: inline-block; animation: glitch 4.4s infinite steps(1); }
+.glitch::before, .glitch::after { content: attr(data-t); position: absolute; inset: 0; mix-blend-mode: screen; pointer-events: none; }
+.glitch::before { color: var(--mag); transform: translate(-.04em, 0); clip-path: inset(0 0 56% 0); }
+.glitch::after  { color: var(--cy);  transform: translate(.04em, 0);  clip-path: inset(56% 0 0 0); }
+@keyframes glitch { 0%,92%,100% { transform: none; } 93% { transform: translate(.05em,-.02em) skewX(-6deg); } 95% { transform: translate(-.04em,.02em); } 97% { transform: translate(.03em,0) skewX(4deg); } }
+
+/* ── buttons: cut-corner slabs ── */
+.btn { display: inline-block; font-family: var(--f-head); font-weight: 900; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; border: 0; color: var(--bg); background: var(--acid); padding: 19px 40px 19px 32px; clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%); transition: transform .18s, background .18s; }
+.btn:hover { transform: translateX(8px); background: #fff; }
+.btn.ghost { background: transparent; color: var(--cy); box-shadow: inset 0 0 0 2px var(--cy); clip-path: none; padding: 17px 26px; }
+.btn.ghost:hover { background: var(--cy); color: var(--bg); transform: none; }
+.btn.dark { background: var(--bg); color: var(--acid); }
+.btn.dark:hover { background: #fff; color: var(--bg); }
+.btn.sm { font-size: 11px; padding: 12px 22px 12px 18px; }
+
+/* ── key art: duotone via blend (grayscale image multiplied onto a color) ── */
+.duo { position: relative; overflow: hidden; background: var(--duo, var(--mag)); }
+.duo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.35); mix-blend-mode: multiply; }
+.cutout { position: relative; overflow: hidden; background: #fff; border: 5px solid var(--bg); box-shadow: 14px 14px 0 var(--sh, var(--acid)); }
+.cutout img { display: block; width: 100%; height: 100%; object-fit: cover; filter: contrast(1.12) saturate(1.2); }
+
+/* ── tilted tape marquee ── */
+@keyframes tape { to { transform: translateX(-50%); } }
+.tape { position: absolute; left: -6%; right: -6%; overflow: hidden; white-space: nowrap; background: var(--acid); color: var(--bg); border-block: 4px solid var(--bg); }
+.tape > div { display: inline-block; padding: 11px 0; font-family: var(--f-impact); font-size: 26px; text-transform: uppercase; animation: tape 26s linear infinite; }
+.tape.dark { background: var(--bg); color: var(--fg); border-color: var(--fg); }
+.tape.dark > div { font-size: 17px; animation-direction: reverse; font-family: var(--f-jp); font-weight: 900; letter-spacing: .1em; }
+.tape.flat { position: relative; left: 0; right: 0; }
+
+/* ── brush/impact SFX ── */
+.sfx { display: inline-block; font-family: var(--f-impact); line-height: .9; color: var(--acid); -webkit-text-stroke: .09em var(--bg); paint-order: stroke fill; }
+
+/* ── overlays ── */
+.scan { position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 3px); mix-blend-mode: overlay; }
+.rays { position: absolute; inset: 0; pointer-events: none; background: repeating-conic-gradient(from 3deg at var(--cx, 66%) var(--cy2, 50%), rgba(255,255,255,.5) 0 .5deg, transparent .5deg 5deg); -webkit-mask-image: radial-gradient(circle at var(--cx, 66%) var(--cy2, 50%), transparent 14%, #000 55%); mask-image: radial-gradient(circle at var(--cx, 66%) var(--cy2, 50%), transparent 14%, #000 55%); }
+
+/* ── reveal on scroll ── */
+.rv { opacity: 0; transform: translateY(34px); }
+.rv.on { opacity: 1; transform: none; transition: opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1); transition-delay: var(--d, 0ms); }
+.rv.left { transform: translateX(-60px); } .rv.right { transform: translateX(60px); }
+.rv.left.on, .rv.right.on { transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .glitch, .tape > div { animation: none; }
+  .rv, .rv.on { opacity: 1; transform: none; transition: none; }
+  html { scroll-behavior: auto; }
+}
